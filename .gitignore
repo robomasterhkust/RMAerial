@@ -10,6 +10,7 @@
 # Precompiled Headers
 *.gch
 *.pch
+*.lst
 
 # Compiled Dynamic libraries
 *.so
@@ -30,3 +31,9 @@
 *.exe
 *.out
 *.app
+*.bin
+*.elf
+*.map
+
+#Debugger file
+*.launch
