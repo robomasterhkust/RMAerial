@@ -1,10 +1,8 @@
-/*! @file dji_hard_driver.cpp
- *  @version 3.3
- *  @date Jun 15 2017
+/*! @file cppforstm32.h
+ *  @version 3.1.8
+ *  @date Aug 05 2016
  *
- *  @brief
- *  Serial device driver abstraction. Provided as an abstract class. Please
- *  inherit and implement for individual platforms.
+ *  @brief Support for printf to USART2 on STM32 platform
  *
  *  @Copyright (c) 2016-2017 DJI
  *
@@ -28,26 +26,16 @@
  *
  */
 
-#include "dji_hard_driver.hpp"
+#ifndef CPPFORSTM32_H
+#define CPPFORSTM32_H
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef DYNAMIC_MEMORY
+void* operator new(size_t size);
+void* operator new[](size_t size);
+void operator delete(void* pointer);
+void operator delete[](void* pointer);
+#endif // DYNAMIC_MEMORY
 
-using namespace DJI::OSDK;
-
-//! @todo change to dji_logging method
-char DJI::OSDK::buffer[DJI::OSDK::HardDriver::bufsize];
-
-HardDriver::HardDriver()
-{
-}
-
-HardDriver::~HardDriver()
-{
-}
-
-void
-HardDriver::displayLog(const char* buf)
-{
-  if (buf)
-  {}
-  else
-  {}
-}
+#endif // CPPFORSTM32_H

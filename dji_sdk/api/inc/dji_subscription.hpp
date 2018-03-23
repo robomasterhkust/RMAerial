@@ -311,9 +311,7 @@ public: // public methods
       return ans;
     }
     else
-    {
-      DERROR("Topic 0x%X value memory not initialized, return default", topic);
-    }
+    {}
     protocol->getThreadHandle()->freeMSG();
 
     memset(&ans, 0xFF, sizeof(ans));

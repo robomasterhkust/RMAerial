@@ -36,14 +36,10 @@ CircularBuffer::CircularBuffer()
 {
   buffer =
     (VehicleCallBackHandler*)malloc(5000 * sizeof(VehicleCallBackHandler));
-  if(buffer == NULL){
-    DERROR("buffer memory alloc failed\n");
-  }
+  if(buffer == NULL){}
 
   buffer2 = (RecvContainer*)malloc(5000 * sizeof(RecvContainer));
-  if(buffer2 == NULL){
-    DERROR("buffer2 memory alloc failed\n");
-  }
+  if(buffer2 == NULL){}
 
   head    = 0;
   tail    = 0;
@@ -75,7 +71,6 @@ CircularBuffer::cbPush(CircularBuffer*                   CBuffer,
   if (next == tail)
   {
     CBuffer->cbPop(CBuffer, &cbData, &recvData);
-    DSTATUS("Warning: Circular Buffer Full. Discarded Callback from Tail \n");
   }
   buffer2[head] = recvData;
   buffer[head]  = cbData;
@@ -90,7 +85,6 @@ CircularBuffer::cbPop(CircularBuffer*                    CBuffer,
 {
   if (head == tail)
   {
-    DSTATUS("Circular Buffer empty \n");
     return -1;
   }
   *cbData   = buffer[tail];

@@ -5,6 +5,10 @@
 
 #define GRAV               9.80665f
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #define FLT_EPSILON        1.1920929e-07F
 #define M_PI_2_F    (float)(M_PI/2)
 

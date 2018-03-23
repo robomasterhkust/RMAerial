@@ -31,7 +31,6 @@
 #ifndef DJI_HARDDRIVER_H
 #define DJI_HARDDRIVER_H
 
-#include "dji_log.hpp"
 #include "dji_memory.hpp"
 #include "dji_type.hpp"
 #include <cstdint>

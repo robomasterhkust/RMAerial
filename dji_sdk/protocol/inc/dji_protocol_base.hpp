@@ -33,7 +33,6 @@
 #include "dji_ack.hpp"
 #include "dji_aes.hpp"
 #include "dji_hard_driver.hpp"
-#include "dji_log.hpp"
 #include "dji_thread_manager.hpp"
 #include "dji_type.hpp"
 

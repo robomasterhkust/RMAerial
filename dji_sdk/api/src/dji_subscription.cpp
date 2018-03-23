@@ -126,7 +126,6 @@ DataSubscription::decodeCallback(Vehicle*      vehiclePtr,
 
   if (pkgID >= MAX_NUMBER_OF_PACKAGE)
   {
-    DERROR("Unexpected package id %d received.", pkgID);
     return;
   }
 
@@ -157,7 +156,6 @@ DataSubscription::initPackageFromTopicList(int packageID, int numberOfTopics,
 {
   if (package[packageID].isOccupied())
   {
-    DERROR("package [%d] is being occupied.\n", packageID);
     return false;
   }
 
@@ -210,7 +208,6 @@ DataSubscription::verifyCallback(Vehicle*      vehiclePtr,
 
   if (!ACK::getError(ackErrorCode))
   {
-    DSTATUS("Verify subscription successful.");
 //    subscribPtr->verifySuccessful = true;
   }
   else
@@ -234,7 +231,6 @@ DataSubscription::verify(int timeout)
 
   if (!ACK::getError(ack))
   {
-    DSTATUS("Verify subscription successful.");
 //    verifySuccessful = true;
   }
   else
@@ -253,10 +249,6 @@ DataSubscription::startPackage(int packageID)
   // During this period, data will be copied to illegal memory
   if (package[packageID].isOccupied())
   {
-    DERROR("Cannot start package [%d] which "
-           "is being occupied. Call "
-           "removePackage first.",
-           packageID);
     return;
   }
 
@@ -288,11 +280,6 @@ DataSubscription::addPackageCallback(Vehicle*      vehiclePtr,
   ackErrorCode.info = rcvContainer.recvInfo;
   ackErrorCode.data = rcvContainer.recvData.subscribeACK;
 
-  DSTATUS("Start package %d result: %d.", packageHandle->getInfo().packageID,
-          ackErrorCode.data);
-  DSTATUS("Package %d info: freq=%d, nTopics=%d.",
-          packageHandle->getInfo().packageID, packageHandle->getInfo().freq,
-          packageHandle->getInfo().numberOfTopics);
   if (!ACK::getError(ackErrorCode))
   {
     packageHandle->packageAddSuccessHandler();
@@ -314,11 +301,6 @@ DataSubscription::startPackage(int packageID, int timeout)
   // During this period, data will be copied to illegal memory
   if (package[packageID].isOccupied())
   {
-    DERROR("Cannot start package [%d] which "
-           "is being occupied. Call "
-           "removePackage first.",
-           packageID);
-
     ack.info.cmd_set = OpenProtocolCMD::CMDSet::subscribe;
 
     // @TODO: the SUBSCRIBER_MULTIPLE_SUBSCRIBE is not returned from FC, we may
@@ -339,13 +321,6 @@ DataSubscription::startPackage(int packageID, int timeout)
 
   ack = *((ACK::ErrorCode*)getVehicle()->waitForACK(
     OpenProtocolCMD::CMDSet::Subscribe::addPackage, timeout));
-
-  DSTATUS("Start package %d result: %d.",
-          package[packageID].getInfo().packageID, ack.data);
-  DSTATUS("Package %d info: freq=%d, nTopics=%d.\n",
-          package[packageID].getInfo().packageID,
-          package[packageID].getInfo().freq,
-          package[packageID].getInfo().numberOfTopics);
 
   if (!ACK::getError(ack))
   {
@@ -393,8 +368,6 @@ DataSubscription::extractOnePackage(RecvContainer*       pRcvContainer,
     if(!(pkg->hasLeftOverData()))
     {
       pkg->setLeftOverDataFlag(true);
-      DDEBUG("Detected telemetry data in package %d before subscribing to it.",pkg->getInfo().packageID);
-      DDEBUG("This was due to unclean quit of the program without restarting the drone.\n");
     }
   }
   protocol->getThreadHandle()->freeMSG();
@@ -430,7 +403,6 @@ DataSubscription::removePackageCallback(Vehicle*      vehiclePtr,
 
   if (!ACK::getError(ackErrorCode))
   {
-    DSTATUS("Remove package %d successful.", packageID);
     packageHandle->packageRemoveSuccessHandler();
     if(packageHandle->hasLeftOverData())
     {
@@ -458,7 +430,6 @@ DataSubscription::removePackage(int packageID, int timeout)
 
   if (!ACK::getError(ack))
   {
-    DSTATUS("Remove package %d successful.", packageID);
     package[packageID].packageRemoveSuccessHandler();
     if(package[packageID].hasLeftOverData())
     {
@@ -483,14 +454,10 @@ void DataSubscription::removeLeftOverPackages()
       if(package[packageID].hasLeftOverData())
       {
         if(retry == 3)
-        {
-          DERROR("Package %d was not properly removed due to unclean quit. Please power cycle the drone...", packageID);
-        }
+        {}
         ack = removePackage(packageID, 1);
         if(!ACK::getError(ack))
-        {
-          DERROR("failed to remove package %d", packageID);
-        }
+        {}
       }
     }
   }
@@ -505,9 +472,7 @@ void DataSubscription::removeAllExistingPackages()
     {
       ack = removePackage(packageID, 1);
       if(!ACK::getError(ack))
-      {
-        DERROR("failed to remove package %d", packageID);
-      }
+      {}
     }
   }
 }
@@ -535,9 +500,7 @@ DataSubscription::resetCallback(Vehicle*      vehiclePtr,
   ackErrorCode.data = rcvContainer.recvData.subscribeACK;
 
   if (!ACK::getError(ackErrorCode))
-  {
-    DSTATUS("Reset Subscription Successful.");
-  }
+  {}
   else
   {
     ACK::getErrorCodeMessage(ackErrorCode, __func__);
@@ -556,9 +519,7 @@ DataSubscription::reset(int timeout)
           OpenProtocolCMD::CMDSet::Subscribe::reset, timeout));
 
   if (!ACK::getError(ack))
-  {
-    DSTATUS("Reset Subscription Successful.\n");
-  }
+  {}
   else
   {
     ACK::getErrorCodeMessage(ack, __func__);
@@ -640,16 +601,11 @@ SubscriptionPackage::setTopicList(TopicName* topics, int numberOfTopics,
   {
     if (TopicDataBase[topics[i]].maxFreq < freq)
     {
-      DDEBUG("Requesting Frequency %d, Max Frequency %d\n", freq,
-             TopicDataBase[topics[i]].maxFreq);
       return false;
     }
     totalSize += TopicDataBase[topics[i]].size;
     if (totalSize > ADD_PACKAEG_DATA_LENGTH)
     {
-      DDEBUG(
-        "Too many topics, data payload of the first %d topic is already %d", i,
-        totalSize);
       return false;
     }
   }

@@ -129,7 +129,6 @@ CMDSession*
 OpenProtocol::allocSession(uint16_t session_id, uint16_t size)
 {
   uint32_t i;
-  DDEBUG("Allocation size %d", size);
   MMU_Tab* memoryTab = NULL;
 
   if (session_id == 0 || session_id == 1)
@@ -139,7 +138,6 @@ OpenProtocol::allocSession(uint16_t session_id, uint16_t size)
     else
     {
       /* session is busy */
-      DERROR("session %d is busy\n", session_id);
       return NULL;
     }
   }
@@ -169,7 +167,6 @@ OpenProtocol::freeSession(CMDSession* session)
 {
   if (session->usageFlag == 1)
   {
-    DDEBUG("session id %d\n", session->sessionID);
     mmu->freeMemory(session->mmu);
     session->usageFlag = 0;
   }
@@ -186,7 +183,6 @@ OpenProtocol::allocACK(uint16_t session_id, uint16_t size)
     memoryTab = mmu->allocMemory(size);
     if (memoryTab == NULL)
     {
-      DERROR("there is not enough memory\n");
       return NULL;
     }
     else
@@ -195,7 +191,6 @@ OpenProtocol::allocACK(uint16_t session_id, uint16_t size)
       return &ACKSessionTab[session_id - 1];
     }
   }
-  DERROR("wrong Ack session ID: 0x%X\n", session_id);
   return NULL;
 }
 
@@ -250,7 +245,6 @@ OpenProtocol::sendInterface(void* cmd_container)
   Command*    cmdContainer = (Command*)cmd_container;
   if (cmdContainer->length > PRO_PURE_DATA_MAX_SIZE)
   {
-    DERROR("ERROR,length=%lu is over-sized\n", cmdContainer->length);
     return -1;
   }
   /*! Switch on session to decide whether the command is requesting an ACK and
@@ -270,7 +264,6 @@ OpenProtocol::sendInterface(void* cmd_container)
       if (cmdSession == (CMDSession*)NULL)
       {
         threadHandle->freeRecvContainer();
-        DERROR("ERROR,there is not enough memory\n");
         return -1;
       }
       //! Encrypt the data being sent
@@ -279,13 +272,10 @@ OpenProtocol::sendInterface(void* cmd_container)
                 0, cmdContainer->encrypt, cmdSession->sessionID, seq_num);
       if (ret == 0)
       {
-        DERROR("encrypt ERROR\n");
         freeSession(cmdSession);
         threadHandle->freeRecvContainer();
         return -1;
       }
-
-      DDEBUG("send data in session mode 0\n");
 
       //! Actually send the data
       sendData(cmdSession->mmu->pmem);
@@ -303,7 +293,6 @@ OpenProtocol::sendInterface(void* cmd_container)
       if (cmdSession == (CMDSession*)NULL)
       {
         threadHandle->freeRecvContainer();
-        DERROR("ERROR,there is not enough memory\n");
         return -1;
       }
       if (seq_num == cmdSession->preSeqNum)
@@ -315,7 +304,6 @@ OpenProtocol::sendInterface(void* cmd_container)
                 0, cmdContainer->encrypt, cmdSession->sessionID, seq_num);
       if (ret == 0)
       {
-        DERROR("encrypt ERROR\n");
         freeSession(cmdSession);
         threadHandle->freeRecvContainer();
         return -1;
@@ -330,7 +318,6 @@ OpenProtocol::sendInterface(void* cmd_container)
       cmdSession->preTimestamp = deviceDriver->getTimeStamp();
       cmdSession->sent         = 1;
       cmdSession->retry        = 1;
-      DDEBUG("sending session %d\n", cmdSession->sessionID);
       sendData(cmdSession->mmu->pmem);
       threadHandle->freeRecvContainer();
       break;
@@ -344,7 +331,6 @@ OpenProtocol::sendInterface(void* cmd_container)
       if (cmdSession == (CMDSession*)NULL)
       {
         threadHandle->freeRecvContainer();
-        DERROR("ERROR,there is not enough memory\n");
         return -1;
       }
       if (seq_num == cmdSession->preSeqNum)
@@ -357,7 +343,6 @@ OpenProtocol::sendInterface(void* cmd_container)
 
       if (ret == 0)
       {
-        DERROR("encrypt ERROR");
         freeSession(cmdSession);
         threadHandle->freeRecvContainer();
         return -1;
@@ -378,12 +363,10 @@ OpenProtocol::sendInterface(void* cmd_container)
       cmdSession->preTimestamp = deviceDriver->getTimeStamp();
       cmdSession->sent         = 1;
       cmdSession->retry        = cmdContainer->retry;
-      DDEBUG("Sending session %d\n", cmdSession->sessionID);
       sendData(cmdSession->mmu->pmem);
       threadHandle->freeRecvContainer();
       break;
     default:
-      DERROR("Unknown mode:%d\n", cmdContainer->sessionMode);
       break;
   }
   return 0;
@@ -402,19 +385,14 @@ OpenProtocol::sendData(uint8_t* buf)
   //! Serial Device call: last link in the send pipeline
   ans = deviceDriver->send(buf, pHeader->length);
   if (ans == 0)
-    DSTATUS("Port did not send");
+  {}
   if (ans == (size_t)-1)
-    DERROR("Port closed.");
+  {}
 
   if (ans != pHeader->length)
-  {
-    DERROR("Open Protocol cmd send failed, send_len: %d packet_len: %d\n", ans,
-           pHeader->length);
-  }
+  {}
   else
-  {
-    DDEBUG("Open Protocol cmd send success\n");
-  }
+  {}
 
   return (int)ans;
 }
@@ -438,13 +416,10 @@ OpenProtocol::sendPoll()
         {
           if (CMDSessionTab[i].sent >= CMDSessionTab[i].retry)
           {
-            DSTATUS("Sending timeout, Free session %d\n",
-                    CMDSessionTab[i].sessionID);
             freeSession(&CMDSessionTab[i]);
           }
           else
           {
-            DDEBUG("Retry session %d\n", CMDSessionTab[i].sessionID);
             sendData(CMDSessionTab[i].mmu->pmem);
             CMDSessionTab[i].preTimestamp = curTimestamp;
             CMDSessionTab[i].sent++;
@@ -452,16 +427,13 @@ OpenProtocol::sendPoll()
         }
         else
         {
-          DDEBUG("Send once %d\n", i);
           sendData(CMDSessionTab[i].mmu->pmem);
           CMDSessionTab[i].preTimestamp = curTimestamp;
         }
         threadHandle->freeRecvContainer();
       }
       else
-      {
-        DDEBUG("Wait for timeout Session: %d \n", i);
-      }
+      {}
     }
   }
   //! @note Add auto resendpoll
@@ -585,8 +557,6 @@ OpenProtocol::appHandler(void* protocolHeader)
         if (p2protocolHeader->sessionID == openHeader->sessionID &&
             p2protocolHeader->sequenceNumber == openHeader->sequenceNumber)
         {
-          DDEBUG("Recv Session %d ACK\n", p2protocolHeader->sessionID);
-
           //! Create receive container for error code management
           p_recvContainer->dispatchInfo.isAck = true;
           p_recvContainer->recvInfo.cmd_set =
@@ -635,15 +605,10 @@ OpenProtocol::appHandler(void* protocolHeader)
       //! @attention here real have a bug about self-looping issue.
       //! @bug not affect OSDK currerently. 2017-1-18
       default: //! @note session id is 2
-        DSTATUS("ACK %d", openHeader->sessionID);
-
         if (ACKSessionTab[openHeader->sessionID - 1].sessionStatus ==
             ACK_SESSION_PROCESS)
-        {
-          DDEBUG("This session is waiting for App ACK:"
-                 "session id=%d,seq_num=%d\n",
-                 openHeader->sessionID, openHeader->sequenceNumber);
-        }
+        {}
+          
         else if (ACKSessionTab[openHeader->sessionID - 1].sessionStatus ==
                  ACK_SESSION_IDLE)
         {
@@ -660,18 +625,11 @@ OpenProtocol::appHandler(void* protocolHeader)
             (OpenHeader*)ACKSessionTab[openHeader->sessionID - 1].mmu->pmem;
           if (p2protocolHeader->sequenceNumber == openHeader->sequenceNumber)
           {
-            DDEBUG("Repeat ACK to remote,session "
-                   "id=%d,seq_num=%d\n",
-                   openHeader->sessionID, openHeader->sequenceNumber);
             sendData(ACKSessionTab[openHeader->sessionID - 1].mmu->pmem);
             threadHandle->freeRecvContainer();
           }
           else
           {
-            DDEBUG("Same session,but new seq_num pkg,session id=%d,"
-                   "pre seq_num=%d,cur seq_num=%d\n",
-                   openHeader->sessionID, p2protocolHeader->sequenceNumber,
-                   openHeader->sequenceNumber);
             ACKSessionTab[openHeader->sessionID - 1].sessionStatus =
               ACK_SESSION_PROCESS;
             threadHandle->freeRecvContainer();
@@ -918,8 +876,6 @@ OpenProtocol::encrypt(uint8_t* pdest, const uint8_t* psrc, uint16_t w_len,
 
   if (p_filter->encode == 0 && is_enc)
   {
-    DERROR("Can not send encode data, Please activate your device to get an "
-           "available key.\n");
     return 0;
   }
   if (w_len == 0 || psrc == 0)
@@ -930,8 +886,6 @@ OpenProtocol::encrypt(uint8_t* pdest, const uint8_t* psrc, uint16_t w_len,
 
   if (is_enc)
     data_len = data_len + (16 - w_len % 16);
-
-  DDEBUG("data len: %d\n", data_len);
 
   p_head->sof       = OpenProtocol::SOF;
   p_head->length    = data_len;

@@ -190,7 +190,6 @@ ProtocolBase::storeData(uint8_t in_data)
   }
   else
   {
-    DERROR("buffer overflow");
     memset(p_filter->recvBuf, 0, p_filter->recvIndex);
     p_filter->recvIndex = 0;
   }

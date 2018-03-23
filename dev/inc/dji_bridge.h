@@ -2,7 +2,7 @@
 #include "ch.h"
 #include "hal.h"
 
-#define UART_DJI_A3 &UARTD6
+#define UART_DJI_A3 &UARTD3
 
 class DJI_bridge //: public DJI::OSDK::HardDriver
 {

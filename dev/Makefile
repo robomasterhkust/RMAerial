@@ -103,6 +103,7 @@ include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
+include $(CHIBIOS)/dji_sdk/dji_sdk.mk
 # Other files (optional).
 #include $(CHIBIOS)/test/rt/test.mk
 
@@ -135,7 +136,8 @@ CSRC = $(STARTUPSRC) \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC = main.cpp
+CPPSRC = main.cpp	dji_bridge.cpp cppforstm32.cpp Activate.cpp \
+				$(DJI_SRC)
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -168,6 +170,7 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(CHIBIOS)/os/various \
 				 $(CHIBIOS)/mavlink \
 				 $(CHIBIOS)/os/hal/lib/streams \
+				 $(DJI_INC) \
 				 inc -lm
 
 ##define SERIAL_CMD       &SDU1
@@ -184,7 +187,7 @@ MCU  = cortex-m4
 #TRGT = arm-elf-
 TRGT = arm-none-eabi-
 CC   = $(TRGT)gcc
-CPPC = $(TRGT)g++
+CPPC = $(TRGT)g++ -std=c++11
 # Enable loading with g++ only if you need C++ runtime support.
 # NOTE: You can use C++ even without C++ support if you are careful. C++
 #       runtime support makes code size explode.

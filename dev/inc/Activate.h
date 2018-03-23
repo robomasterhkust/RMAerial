@@ -1,10 +1,9 @@
-/*! @file dji_hard_driver.cpp
- *  @version 3.3
- *  @date Jun 15 2017
+/*! @file Activate.h
+ *  @version 3.1.8
+ *  @date Aug 05 2016
  *
  *  @brief
- *  Serial device driver abstraction. Provided as an abstract class. Please
- *  inherit and implement for individual platforms.
+ *  Activation process for the STM32 example App.
  *
  *  @Copyright (c) 2016-2017 DJI
  *
@@ -28,26 +27,13 @@
  *
  */
 
-#include "dji_hard_driver.hpp"
+#ifndef ACTIVATE_H
+#define ACTIVATE_H
+
+#include "dji_vehicle.hpp"
+#include "string.h"
 
 using namespace DJI::OSDK;
+void userActivate();
 
-//! @todo change to dji_logging method
-char DJI::OSDK::buffer[DJI::OSDK::HardDriver::bufsize];
-
-HardDriver::HardDriver()
-{
-}
-
-HardDriver::~HardDriver()
-{
-}
-
-void
-HardDriver::displayLog(const char* buf)
-{
-  if (buf)
-  {}
-  else
-  {}
-}
+#endif // ACTIVATE_H

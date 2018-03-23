@@ -29,7 +29,6 @@
  */
 
 #include "dji_ack.hpp"
-#include "dji_log.hpp"
 #include <string.h>
 
 const bool DJI::OSDK::ACK::SUCCESS = 0;
@@ -641,7 +640,6 @@ ACK::getError(ACK::ErrorCode ack)
 void
 ACK::getErrorCodeMessage(ACK::ErrorCode ack, const char* func)
 {
-  DSTATUS("%s", func);
   switch (ack.info.cmd_set)
   {
     case OpenProtocolCMD::CMDSet::activation:
@@ -689,9 +687,7 @@ ACK::getCMDSetActivationMSG(ACK::ErrorCode ack)
   auto msg = activateErrorCodeMap.find(ack.data);
 
   if (msg != activateErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
   {
     getCommonErrorCodeMessage(ack);
@@ -706,13 +702,9 @@ ACK::getCommonErrorCodeMessage(ACK::ErrorCode ack)
   auto msg = commonErrorCodeMap.find(ack.data);
 
   if (msg != commonErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
-  {
-    DSTATUS("UNKNOWN_ACK_ERROR_CODE\n");
-  }
+  {}
 }
 
 void
@@ -723,13 +715,9 @@ ACK::getCMDSetSubscribeMSG(ACK::ErrorCode ack)
   auto msg = subscribeErrorCodeMap.find(ack.data);
 
   if (msg != subscribeErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
-  {
-    DSTATUS("UNKNOWN_SUBSCRIBER_ACK_ERROR_CODE_0x%X\n", ack.data);
-  }
+  {}
 }
 
 void
@@ -778,20 +766,13 @@ ACK::getCMDIDSetControlMSG(uint8_t ack, Version::FirmWare version)
         OpenProtocolCMD::ErrorCode::ControlACK::SetControl::RC_MODE_ERROR)
     {
       if (version != Version::M100_31 && version != Version::A3_31)
-      {
-        DSTATUS("RC_NEED_MODE_P\n");
-      }
+      {}
       else
-      {
-        DSTATUS("RC_NEED_MODE_F\n");
-      }
+      {}
     }
-    DSTATUS(msg->second);
   }
   else
-  {
-    DSTATUS("UNKNOWN_ACK_ERROR_CODE\n");
-  }
+  {}
 }
 
 void
@@ -820,9 +801,7 @@ ACK::getCMDIDTaskMSG(ACK::ErrorCode ack)
   auto msg = taskErrorCodeMap.find(ack.data);
 
   if (msg != taskErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
   {
     getCommonErrorCodeMessage(ack);
@@ -840,9 +819,7 @@ ACK::getCMDIDSetArmMSG(ACK::ErrorCode ack)
   auto msg = setArmErrorCodeMap.find(ack.data);
 
   if (msg != setArmErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
   {
     getCommonErrorCodeMessage(ack);
@@ -867,13 +844,9 @@ ACK::getCMDSetMissionMSG(ACK::ErrorCode ack)
   auto msg = missionErrorCodeMap.find(ack.data);
 
   if (msg != missionErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
-  {
-    DSTATUS("UNKNOWN_MISSION_ACK_ERROR_CODE\n");
-  }
+  {}
 }
 
 void
@@ -894,13 +867,9 @@ ACK::getCMDSetMFIOMSG(ACK::ErrorCode ack)
   auto msg = mfioErrorCodeMap.find(ack.data);
 
   if (msg != mfioErrorCodeMap.end())
-  {
-    DSTATUS(msg->second);
-  }
+  {}
   else
-  {
-    DSTATUS("MFIO_UNKNOWN_ERROR\n");
-  }
+  {}
 }
 
 } // namespace OSDK

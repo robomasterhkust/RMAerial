@@ -1,10 +1,8 @@
-/*! @file dji_hard_driver.cpp
- *  @version 3.3
- *  @date Jun 15 2017
+/*! @file cppforstm32.cpp
+ *  @version 3.1.8
+ *  @date Aug 05 2016
  *
- *  @brief
- *  Serial device driver abstraction. Provided as an abstract class. Please
- *  inherit and implement for individual platforms.
+ *  @brief Support for printf to USART2 on STM32 platform
  *
  *  @Copyright (c) 2016-2017 DJI
  *
@@ -28,26 +26,57 @@
  *
  */
 
-#include "dji_hard_driver.hpp"
+#include "stm32f4xx.h"
+#include "cppforstm32.h"
 
-using namespace DJI::OSDK;
-
-//! @todo change to dji_logging method
-char DJI::OSDK::buffer[DJI::OSDK::HardDriver::bufsize];
-
-HardDriver::HardDriver()
+#ifdef DYNAMIC_MEMORY
+void*
+operator new(size_t size)
 {
+  if (NULL == size)
+  {
+#ifdef DEBUG
+    printf("Error! Size is zero");
+#endif // DEBUG
+    return NULL;
+  }
+  void* p = malloc(size);
+#ifdef DEBUG
+  if (p == 0)
+    printf("Lack Memory!");
+#endif // DEBUG
+  return p;
 }
 
-HardDriver::~HardDriver()
+void*
+operator new[](size_t size)
 {
+  return operator new(size);
 }
 
 void
-HardDriver::displayLog(const char* buf)
+operator delete(void* pointer)
 {
-  if (buf)
-  {}
-  else
-  {}
+  if (NULL != pointer)
+  {
+    free(pointer);
+  }
 }
+
+void
+operator delete[](void* pointer)
+{
+  operator delete(pointer);
+}
+#endif // DYNAMIC_MEMORY
+
+//!@code printf link functions
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+// int fputc(int ch, FILE *f)
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+//!@endcode printf link fuctions.

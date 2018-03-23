@@ -72,9 +72,7 @@ MFIO::config(MFIO::MODE mode, CHANNEL channel, uint32_t defaultValue,
                                  &data, sizeof(data), 500, 2, true, cbIndex);
   }
   else
-  {
-    DERROR("channel already used 0x%X,0x%X", channelUsage, 1 << channel);
-  }
+  {}
 }
 
 ACK::ErrorCode
@@ -91,7 +89,6 @@ MFIO::config(MFIO::MODE mode, CHANNEL channel, uint32_t defaultValue,
     data.mode    = mode;
     data.value   = defaultValue;
     data.freq    = freq;
-    DSTATUS("sent");
     vehicle->protocolLayer->send(2, 0, OpenProtocolCMD::CMDSet::MFIO::init,
                                  &data, sizeof(data), 500, 2, false, 0);
 
@@ -102,7 +99,6 @@ MFIO::config(MFIO::MODE mode, CHANNEL channel, uint32_t defaultValue,
   }
   else
   {
-    DERROR("Channel already used 0x%X,0x%X", channelUsage, 1 << channel);
     ack.info.cmd_set = OpenProtocolCMD::CMDSet::mfio;
     ack.data         = 0xFF;
     return ack;
@@ -233,7 +229,4 @@ MFIO::getValueCallback(RecvContainer recvFrame, UserData data)
 
   memcpy((uint8_t*)&result, ackPtr, 1);
   memcpy((uint8_t*)&value, ackPtr + 1, 4);
-
-  DSTATUS("\n status: %d\n", result);
-  DSTATUS("\n value: %d\n", value);
 }
