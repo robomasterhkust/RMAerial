@@ -14,7 +14,6 @@
     limitations under the License.
 */
 #include "main.h"
-#include "dji_driver.hpp"
 
 static BaseSequentialStream* chp = (BaseSequentialStream*)&SDU1;
 
@@ -119,8 +118,6 @@ int main(void)
   attitude_init();
   can_processInit();
   RC_init();
-
-  //DJI::OSDK::DJI_driver a3;
 
   while(!power_check())
     chThdSleepMilliseconds(200);

@@ -103,7 +103,6 @@ include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
-include $(CHIBIOS)/dji_sdk/dji_sdk.mk
 # Other files (optional).
 #include $(CHIBIOS)/test/rt/test.mk
 
@@ -136,8 +135,7 @@ CSRC = $(STARTUPSRC) \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC = main.cpp	dji_bridge.cpp dji_driver.cpp cppforstm32.cpp Activate.cpp \
-				$(DJI_SRC)
+CPPSRC = main.cpp	dji_receiver.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -170,7 +168,6 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(CHIBIOS)/os/various \
 				 $(CHIBIOS)/mavlink \
 				 $(CHIBIOS)/os/hal/lib/streams \
-				 $(DJI_INC) \
 				 inc -lm
 
 ##define SERIAL_CMD       &SDU1
