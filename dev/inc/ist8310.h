@@ -58,6 +58,10 @@ typedef struct{
   #endif
 }magStruct;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 magStruct* ist8310_get(void);
 
 volatile float* ist8310_getValue(void);
@@ -65,5 +69,9 @@ uint32_t ist8310_getError(void);
 
 uint8_t ist8310_init(const magConfigStruct* const conf);
 uint8_t ist8310_update(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

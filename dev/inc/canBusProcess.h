@@ -1,7 +1,6 @@
 #ifndef _CAN_BUS_PROCESS_H_
 #define _CAN_BUS_PROCESS_H_
 
-#include "stdint.h"
 #include "stdbool.h"
 #include "can_lld.h"
 #include "string.h"
@@ -55,6 +54,10 @@ typedef struct{
     uint16_t key_code;
 } dbus_tx_canStruct;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 volatile GimbalEncoder_canStruct* can_getGimbalMotor(void);
 volatile ChassisEncoder_canStruct* can_getChassisMotor(void);
 
@@ -65,5 +68,9 @@ void can_motorSetCurrent(CANDriver *const CANx,
   const int16_t cm2_iq,
   const int16_t cm3_iq,
   const int16_t cm4_iq);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

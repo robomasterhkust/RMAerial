@@ -376,7 +376,7 @@ Vehicle::initOpenProtocol()
   //Initialize platform manager before passing pointer to OpenProtocol constructor
   this->platformManager = new PlatformManager();
 
-  this->protocolLayer = new (std::nothrow)
+  this->protocolLayer = new
     OpenProtocol(this->platformManager, this->device, this->baudRate);
   if (this->protocolLayer == 0)
   {
@@ -404,10 +404,6 @@ Vehicle::initMainReadThread()
     return true;
   }
 
-#if defined(STM32) || defined(__arm__) || defined(QT)
-#else
-  dynamic_cast<DJI::OSDK::LinuxSerialDevice*>(this->protocolLayer->getDriver())->setSerialPureTimedRead();
-#endif
   return UARTSerialReadThread->createThread();
 }
 
@@ -464,7 +460,6 @@ Vehicle::initFullPlatformSupport()
 bool
 Vehicle::initVersion()
 {
-#if STM32
   //! Non blocking call for STM32 as it does not support multi-thread
   getDroneVersion();
   this->platformManager->millisecSleep(2000);
@@ -472,13 +467,6 @@ Vehicle::initVersion()
   {
     return true;
   }
-#else
-  ACK::DroneVersion rc = getDroneVersion(wait_timeout);
-  if (!ACK::getError(rc.ack))
-  {
-    return true;
-  }
-#endif
   return false;
 }
 
@@ -718,7 +706,7 @@ Vehicle::initBroadcast()
 
   if (isCmdSetSupported(OpenProtocolCMD::CMDSet::broadcast))
   {
-    this->broadcast = new (std::nothrow) DataBroadcast(this);
+    this->broadcast = new DataBroadcast(this);
     if (this->broadcast == 0)
     {
       return false;
@@ -740,7 +728,7 @@ Vehicle::initControl()
 
   if (isCmdSetSupported(OpenProtocolCMD::CMDSet::control))
   {
-    this->control = new (std::nothrow) Control(this);
+    this->control = new Control(this);
     if (this->control == 0)
     {
       return false;
@@ -760,7 +748,7 @@ Vehicle::initCamera()
     return true;
   }
 
-  this->camera = new (std::nothrow) Camera(this);
+  this->camera = new Camera(this);
 
   if (this->camera == 0)
   {
@@ -780,7 +768,7 @@ Vehicle::initGimbal()
 
   if (isLegacyM600())
   {
-    this->gimbal = new (std::nothrow) Gimbal(this);
+    this->gimbal = new Gimbal(this);
     if (this->gimbal == 0)
     {
       return false;
@@ -832,7 +820,7 @@ Vehicle::initGimbal()
        subscriptionGimbal.mountStatus == GIMBAL_MOUNTED) ||
       this->getFwVersion() == Version::M100_31)
   {
-    this->gimbal = new (std::nothrow) Gimbal(this);
+    this->gimbal = new Gimbal(this);
     if (this->gimbal == 0)
     {
       return false;
@@ -854,7 +842,7 @@ Vehicle::initAdvancedSensing()
     return true;
   }
 
-  this->advancedSensing = new (std::nothrow) AdvancedSensing(this);
+  this->advancedSensing = new AdvancedSensing(this);
   if (this->advancedSensing == 0)
   {
     return false;
@@ -874,7 +862,7 @@ Vehicle::initMFIO()
 
   if (isCmdSetSupported(OpenProtocolCMD::CMDSet::mfio))
   {
-    mfio = new (std::nothrow) MFIO(this);
+    mfio = new MFIO(this);
     if (this->mfio == 0)
     {
       return false;
@@ -894,7 +882,7 @@ Vehicle::initMOC()
     return true;
   }
 
-  moc = new (std::nothrow) MobileCommunication(this);
+  moc = new MobileCommunication(this);
   if (this->moc == 0)
   {
     return false;
@@ -911,7 +899,7 @@ Vehicle::initMissionManager()
     return true;
   }
 
-  this->missionManager = new (std::nothrow) MissionManager(this);
+  this->missionManager = new MissionManager(this);
   if (this->missionManager == 0)
   {
     return false;
@@ -930,7 +918,7 @@ Vehicle::initHardSync()
 
   if (isCmdSetSupported(OpenProtocolCMD::CMDSet::hardwareSync))
   {
-    hardSync = new (std::nothrow) HardwareSync(this);
+    hardSync = new HardwareSync(this);
     if (this->hardSync == 0)
     {
       return false;
@@ -952,7 +940,7 @@ Vehicle::initVirtualRC()
 
   if (isCmdSetSupported(OpenProtocolCMD::CMDSet::virtualRC))
   {
-    virtualRC = new (std::nothrow) VirtualRC(this);
+    virtualRC = new VirtualRC(this);
     if (this->virtualRC == 0)
     {
       return false;

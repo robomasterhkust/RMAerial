@@ -28,14 +28,14 @@
 
 #ifndef CPPFORSTM32_H
 #define CPPFORSTM32_H
-#include <stdint.h>
+
+#include "hal.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef DYNAMIC_MEMORY
+
 void* operator new(size_t size);
 void* operator new[](size_t size);
 void operator delete(void* pointer);
 void operator delete[](void* pointer);
-#endif // DYNAMIC_MEMORY
 
 #endif // CPPFORSTM32_H

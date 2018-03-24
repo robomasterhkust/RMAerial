@@ -127,7 +127,7 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/various/syscalls.c \
 			 $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
-       shellcfg.c flash.c sdlog.c\
+       flash.c sdlog.c shellcfg.c\
        mpu6500.c attitude.c ist8310.c math_misc.c \
        canBusProcess.c dbus.c gimbal.c params.c usbcfg.c \
        calibrate_sensor.c shoot_pwm.c feeder.c\
@@ -136,7 +136,7 @@ CSRC = $(STARTUPSRC) \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC = main.cpp	dji_bridge.cpp cppforstm32.cpp Activate.cpp \
+CPPSRC = main.cpp	dji_bridge.cpp dji_driver.cpp cppforstm32.cpp Activate.cpp \
 				$(DJI_SRC)
 
 # C sources to be compiled in ARM mode regardless of the global setting.

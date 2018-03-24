@@ -90,7 +90,7 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
   GimbalStruct* gimbal = gimbal_get();
   RC_Ctl_t* rc = RC_get();
 
-  GimbalEncoder_canStruct* gm =  can_getGimbalMotor();
+  volatile GimbalEncoder_canStruct* gm =  can_getGimbalMotor();
 
   chprintf(chp,"accelFiltered[X]: %f\r\n",PIMU->accelFiltered[X]);
   chprintf(chp,"accelFiltered[Y]: %f\r\n",PIMU->accelFiltered[Y]);

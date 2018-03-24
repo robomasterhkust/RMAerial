@@ -32,8 +32,8 @@
 #ifndef DJI_TYPE
 #define DJI_TYPE
 
-#include <cstdio>
-#include <stdint.h>
+#include <stdio.h>
+#include "hal.h"
 
 //! Define the UNUSED macro to suppress compiler warnings about unused arguments
 #ifdef __GNUC__
@@ -44,7 +44,7 @@
 #define __DELETE(x) delete x
 
 //! @todo fix warning.
-#ifndef STM32
+#if !defined(STM32) || !defined(CH)
 #pragma warning(disable : 4100)
 #pragma warning(disable : 4800)
 #pragma warning(disable : 4996)
@@ -55,18 +55,13 @@
 #endif // STM32
 #endif //__GNUC__
 
-#ifdef WIN32
-#define __func__ __FUNCTION__
-#endif // WIN32
 
 //! @note for ARMCC-5.0 compiler
 #ifdef ARMCC
 #pragma anon_unions
 #endif
 
-#ifdef STM32
 typedef unsigned int size_t;
-#endif
 
 namespace DJI
 {

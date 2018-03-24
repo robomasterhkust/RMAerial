@@ -29,7 +29,15 @@ enum calibration_state  // Declare the calibration enum states
     STATE_CALIBRATION_ERROR
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void calibrate_gyroscope(PIMUStruct pIMU);
 void calibrate_accelerometer(PIMUStruct pIMU);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

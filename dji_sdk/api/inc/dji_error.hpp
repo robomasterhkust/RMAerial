@@ -29,7 +29,7 @@
 #ifndef DJI_ERROR_H
 #define DJI_ERROR_H
 
-#include <stdint.h>
+#include "hal.h"
 
 namespace DJI
 {
@@ -124,7 +124,7 @@ public:
     const static uint8_t MOTOR_FAIL_RUNNING_SIMULATOR;
     /*! The aircraft (Inspire series) is setting itself to packing config.*/
     const static uint8_t MOTOR_FAIL_PACK_MODE;
-    /*! This error is caused by attitude limit of IMU if horizontal 
+    /*! This error is caused by attitude limit of IMU if horizontal
      * attitude output by navigation system is over 55 degrees when the
      * system powered up for the first time. */
     const static uint8_t MOTOR_FAIL_IMU_ATTI_LIMIT;
@@ -148,7 +148,7 @@ public:
     /*! The IMU is in calibration or the aircraft should reset after IMU
        calibration.*/
     const static uint8_t MOTOR_FAIL_IMU_CALIBRATING;
-    /*! The aircraft's horizontal attitude angle exceeds the limit 
+    /*! The aircraft's horizontal attitude angle exceeds the limit
      * angle when requesting automatic takeoff. */
     const static uint8_t MOTOR_FAIL_TAKEOFF_TILT_TOO_LARGE;
     const static uint8_t MOTOR_FAIL_RESERVED_31;
@@ -187,7 +187,7 @@ public:
     const static uint8_t MOTOR_FAIL_RESERVED_58;
     const static uint8_t MOTOR_FAIL_RESERVED_59;
     const static uint8_t MOTOR_FAIL_RESERVED_60;
-    /*! IMU is disconnected. Please ask technical assistance 
+    /*! IMU is disconnected. Please ask technical assistance
      * for help if repeats after reset. */
     const static uint8_t MOTOR_FAIL_IMU_DISCONNECTED;
     /*! RC is in calibration. Please finish rc calibration. */
@@ -220,7 +220,7 @@ public:
     const static uint8_t MOTOR_FAIL_RC_NEED_CALI;
     /*! The system detects illegal data. */
     const static uint8_t MOTOR_FAIL_INVALID_FLOAT;
-    /*! This error will happen only in M600 if the aircraft 
+    /*! This error will happen only in M600 if the aircraft
      * detects the battery number is not engouh. <br>
      * Please insert more battery. */
     const static uint8_t MOTOR_FAIL_M600_BAT_TOO_FEW;
@@ -277,10 +277,10 @@ public:
      * For M600, the minimum starting speed is 700rpm. <br>
      * For other aircrafts, the minimum starting speed is 1100rpm.*/
     const static uint8_t MOTOR_FAIL_ENGINE_START_FAILED;
-    /*! During automatic take-off, the status of aircraft doesn't 
+    /*! During automatic take-off, the status of aircraft doesn't
      * change from "on the ground" to "in the air" in 5s.*/
     const static uint8_t MOTOR_FAIL_AUTO_TAKEOFF_LAUNCH_FAILED;
-    /*! The aircraft is on a rollover on the ground or 
+    /*! The aircraft is on a rollover on the ground or
      * the attitude control fails near ground. */
     const static uint8_t MOTOR_FAIL_ROLL_OVER_ON_GRD;
     /*! Battery version error. Please check the battery version. */
@@ -300,7 +300,7 @@ public:
     const static uint8_t MOTOR_FAIL_INTERNAL_111;
     /*! The esc is in calibration. */
     const static uint8_t MOTOR_FAIL_ESC_CALIBRATING;
-    /* GPS signature is invalid because the GPS module 
+    /* GPS signature is invalid because the GPS module
      * has not received valid signature information for 2s. */
     const static uint8_t MOTOR_FAIL_GPS_SIGNATURE_INVALID;
     /* The gimbal is in calibration. */

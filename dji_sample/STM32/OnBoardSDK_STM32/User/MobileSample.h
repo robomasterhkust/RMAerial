@@ -30,7 +30,7 @@
 #ifndef MOBILESAMPLE_H
 #define MOBILESAMPLE_H
 
-#include <cstdint>
+#include <stdint.h>
 #include <dji_vehicle.hpp>
 
 void controlAuthorityMobileCallback(DJI::OSDK::Vehicle*      vehiclePtr,

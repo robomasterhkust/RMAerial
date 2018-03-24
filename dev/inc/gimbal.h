@@ -86,10 +86,18 @@ typedef struct{
 
 }  GimbalStruct;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 GimbalStruct* gimbal_get(void);
 GimbalStruct* gimbal_get_sys_iden(void);
 uint32_t gimbal_get_error(void);
 void gimbal_init(void);
 void gimbal_kill(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

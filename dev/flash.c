@@ -6,7 +6,7 @@
 #include "hal.h"
 #include "flash.h"
 
-size_t flashSectorSize(flashsector_t sector)
+uint32_t flashSectorSize(flashsector_t sector)
 {
     if (sector <= 3)
         return 16 * 1024;
@@ -175,7 +175,7 @@ void flashSectorErase(flashsector_t sector)
     flashLock();
 }
 
-void flashWrite(flashaddr_t address, const char* buffer, size_t size)
+void flashWrite(flashaddr_t address, const char* buffer, uint32_t size)
 {
     if(flashUnlock() == CH_FAILED)
         return;
@@ -211,7 +211,7 @@ void flashWrite(flashaddr_t address, const char* buffer, size_t size)
     flashLock();
 }
 
-void flashRead(flashaddr_t address, char* buffer, size_t size)
+void flashRead(flashaddr_t address, char* buffer, uint32_t size)
 {
     if(flashUnlock() == CH_FAILED)
         return;

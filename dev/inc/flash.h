@@ -12,9 +12,6 @@
 #define FLASH_SECTOR_COUNT 12
 #endif
 
-/* size_t no longer exist */
-#define size_t uint32_t
-
 /* Vimble configured
  * Sector 3 :   0x0800 C000 - 0x0800 FFFF
  * Sector 6 :   0x0804 0000 - 0x0805 FFFF
@@ -78,12 +75,11 @@ typedef uintptr_t flashaddr_t;
 
 /** @brief Index of a sector */
 typedef uint8_t flashsector_t;
-
 /**
  * @brief Get the size of @p sector.
  * @return @p sector size in bytes.
  */
-size_t flashSectorSize(flashsector_t sector);
+uint32_t flashSectorSize(flashsector_t sector);
 
 /**
  * @brief Get the beginning address of @p sector.
@@ -113,7 +109,12 @@ flashsector_t flashSectorAt(flashaddr_t address);
 flashdata_t flashReadData(flashaddr_t address);
 void flashWriteData(flashaddr_t address, const flashdata_t data);
 void flashSectorErase(flashsector_t sector);
-void flashWrite(flashaddr_t address, const char* buffer, size_t size);
-void flashRead(flashaddr_t address, char* buffer, size_t size);
+void flashWrite(flashaddr_t address, const char* buffer, uint32_t size);
+void flashRead(flashaddr_t address, char* buffer, uint32_t size);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* INC_FLASH_H_ */

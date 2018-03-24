@@ -33,7 +33,7 @@
 
 #include "dji_memory.hpp"
 #include "dji_type.hpp"
-#include <cstdint>
+#include "hal.h"
 #include <ctime>
 namespace DJI
 {

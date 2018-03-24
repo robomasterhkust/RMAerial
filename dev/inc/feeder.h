@@ -22,9 +22,15 @@ typedef struct{
     float inte;
 } __attribute__((packed)) pid_struct;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void feeder_func(int mode);
 void feederInit(void);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

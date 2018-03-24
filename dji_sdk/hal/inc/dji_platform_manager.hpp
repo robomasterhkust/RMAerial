@@ -35,17 +35,8 @@
 #include "dji_thread_manager.hpp"
 #include <new>
 
-#ifdef QT
-#include <qt_serial_device.hpp>
-#include <qt_thread.hpp>
-#elif defined(__linux__)
-#include "linux_serial_device.hpp"
-#include "posix_thread.hpp"
-#include "posix_thread_manager.hpp"
-#elif STM32
+#include "dji_bridge.h"
 #include "STM32F4DataGuard.h"
-#include "STM32F4SerialDriver.h"
-#endif
 
 namespace DJI
 {
@@ -83,7 +74,10 @@ public:
   HardDriver* addHardDriver(uint8_t driver_type, const char* device_port = NULL,
                             uint32_t baudrate = 0);
 
-  ThreadAbstract* addThreadHandle();
+  ThreadAbstract* addThreadHandle()
+  {
+    return NULL;
+  }
 
   void millisecSleep(int milliseconds);
 };

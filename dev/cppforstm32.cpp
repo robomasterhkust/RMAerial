@@ -26,25 +26,17 @@
  *
  */
 
-#include "stm32f4xx.h"
 #include "cppforstm32.h"
 
-#ifdef DYNAMIC_MEMORY
 void*
 operator new(size_t size)
 {
   if (NULL == size)
   {
-#ifdef DEBUG
-    printf("Error! Size is zero");
-#endif // DEBUG
     return NULL;
   }
   void* p = malloc(size);
-#ifdef DEBUG
-  if (p == 0)
-    printf("Lack Memory!");
-#endif // DEBUG
+
   return p;
 }
 
@@ -68,15 +60,3 @@ operator delete[](void* pointer)
 {
   operator delete(pointer);
 }
-#endif // DYNAMIC_MEMORY
-
-//!@code printf link functions
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-// int fputc(int ch, FILE *f)
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-//!@endcode printf link fuctions.

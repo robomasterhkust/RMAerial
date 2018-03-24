@@ -36,6 +36,7 @@ int tempPID_Update(pTPIDStruct tempPID, PIMUStruct pIMU);
 void tempControllerInit(void);
 
 #ifdef __cplusplus
+}
 #endif
 
 #endif /* _IMU_TEMP_H_ */

@@ -30,7 +30,7 @@
 #define DJI_COMMAND_H
 
 #include "dji_error.hpp"
-#include <stdint.h>
+#include "hal.h"
 
 namespace DJI
 {

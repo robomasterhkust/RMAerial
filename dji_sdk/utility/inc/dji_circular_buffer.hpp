@@ -28,11 +28,8 @@
 
 #include "dji_open_protocol.hpp"
 #include "dji_vehicle_callback.hpp"
-#include <cstdlib>
 
-#if STM32
 #include <stdlib.h>
-#endif
 
 namespace DJI
 {

@@ -36,11 +36,7 @@
 #include "dji_thread_manager.hpp"
 #include "dji_type.hpp"
 
-#ifdef STM32
 #include <string.h>
-#else
-#include <cstring>
-#endif
 
 namespace DJI
 {

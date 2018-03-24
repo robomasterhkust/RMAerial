@@ -14,6 +14,7 @@
     limitations under the License.
 */
 #include "main.h"
+#include "dji_driver.hpp"
 
 static BaseSequentialStream* chp = (BaseSequentialStream*)&SDU1;
 
@@ -119,6 +120,8 @@ int main(void)
   can_processInit();
   RC_init();
 
+  //DJI::OSDK::DJI_driver a3;
+
   while(!power_check())
     chThdSleepMilliseconds(200);
 
@@ -164,5 +167,3 @@ bool power_failure(void)
   return error & (GIMBAL_PITCH_NOT_CONNECTED | GIMBAL_YAW_NOT_CONNECTED) ==
     (GIMBAL_PITCH_NOT_CONNECTED | GIMBAL_YAW_NOT_CONNECTED);
 }
-
-}}}

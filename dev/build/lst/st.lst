@@ -1,4 +1,4 @@
-ARM GAS  /tmp/cce5lor2.s 			page 1
+ARM GAS  /tmp/ccgIuRjT.s 			page 1
 
 
    1              		.syntax unified
@@ -19,14 +19,14 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   16              		.file	"st.c"
   17              		.text
   18              	.Ltext0:
-  19              		.section	.gnu.lto_.profile.7f674a85d848e191,"",%progbits
+  19              		.section	.gnu.lto_.profile.cfb6f225cdb0d226,"",%progbits
   20 0000 789C6366 		.ascii	"x\234cf```a\200\000F\006w9\000\001 \000n"
   20      60606061 
   20      80004606 
   20      77390001 
   20      20006E
   21              		.text
-  22              		.section	.gnu.lto_.jmpfuncs.7f674a85d848e191,"",%progbits
+  22              		.section	.gnu.lto_.jmpfuncs.cfb6f225cdb0d226,"",%progbits
   23 0000 789C6366 		.ascii	"x\234cf\300\016r\2414+\210`\004\202zF\246\217L\214\323"
   23      C00E72A1 
   23      342B8860 
@@ -49,7 +49,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   27 0047 0082421F 		.ascii	"\000\202B\0379"
   27      39
   28              		.text
-  29              		.section	.gnu.lto_.inline.7f674a85d848e191,"",%progbits
+  29              		.section	.gnu.lto_.inline.cfb6f225cdb0d226,"",%progbits
   30 0000 789C6366 		.ascii	"x\234cf\300\016\312\2414+\003\003\013\017#\003\023\220"
   30      C00ECAA1 
   30      342B0303 
@@ -58,7 +58,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   31 0012 C9B6401E 		.ascii	"\311\266@\036D10r\201\010\006\036^\2400\337\206\\\270"
   31      44313072 
   31      8108061E 
-ARM GAS  /tmp/cce5lor2.s 			page 2
+ARM GAS  /tmp/ccgIuRjT.s 			page 2
 
 
   31      5EA030DF 
@@ -75,7 +75,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   34 0044 00248B08 		.ascii	"\000$\213\010\353"
   34      EB
   35              		.text
-  36              		.section	.gnu.lto_.pureconst.7f674a85d848e191,"",%progbits
+  36              		.section	.gnu.lto_.pureconst.cfb6f225cdb0d226,"",%progbits
   37 0000 789C6366 		.ascii	"x\234cf``\340f\200\000V\006\011F)f)\026)6)\000\004\022"
   37      6060E066 
   37      80005606 
@@ -83,7 +83,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   37      29162936 
   38 0018 00A2     		.ascii	"\000\242"
   39              		.text
-  40              		.section	.gnu.lto_stInit.7f674a85d848e191,"",%progbits
+  40              		.section	.gnu.lto_stInit.cfb6f225cdb0d226,"",%progbits
   41 0000 789C658C 		.ascii	"x\234e\2141\013Aa\024\206\317{n\244\244D\026\177\300"
   41      310B4161 
   41      1486CF7B 
@@ -118,7 +118,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   47      0A94FD75 
   47      982309D9 
   47      EB
-ARM GAS  /tmp/cce5lor2.s 			page 3
+ARM GAS  /tmp/ccgIuRjT.s 			page 3
 
 
   48 007e 9CD1717C 		.ascii	"\234\321q|\036\276\225Ct\221\306\372\257\314v;GtL\224"
@@ -141,7 +141,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   51      D7A30FB4 
   51      4540B7
   52              		.text
-  53              		.section	.gnu.lto_stStartAlarm.7f674a85d848e191,"",%progbits
+  53              		.section	.gnu.lto_stStartAlarm.cfb6f225cdb0d226,"",%progbits
   54 0000 789C9D53 		.ascii	"x\234\235S\335KSa\030\177\237\367\234\235M7T\012bx\241"
   54      DD4B5361 
   54      187F9FF7 
@@ -178,7 +178,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   61 0083 6500FA60 		.ascii	"e\000\372`\300*\271$C%|\342+\034\032|\235Nc\226[\323"
   61      C02AB924 
   61      43257CE2 
-ARM GAS  /tmp/cce5lor2.s 			page 4
+ARM GAS  /tmp/ccgIuRjT.s 			page 4
 
 
   61      2B1C1A7C 
@@ -238,7 +238,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   73      A628B6DE 
   73      18EC4EB2 
   73      746A0E7B 
-ARM GAS  /tmp/cce5lor2.s 			page 5
+ARM GAS  /tmp/ccgIuRjT.s 			page 5
 
 
   73      68DC
@@ -298,7 +298,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   84      BCA3EE65 
   84      332162AE 
   85 023c 3B5CBD2F 		.ascii	";\\\275/\\\035\003e\027\206}\177\222\034\346&\030\027"
-ARM GAS  /tmp/cce5lor2.s 			page 6
+ARM GAS  /tmp/ccgIuRjT.s 			page 6
 
 
   85      5C1D0365 
@@ -346,7 +346,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   94      5FCB4391 
   94      B0
   95              		.text
-  96              		.section	.gnu.lto_stStopAlarm.7f674a85d848e191,"",%progbits
+  96              		.section	.gnu.lto_stStopAlarm.cfb6f225cdb0d226,"",%progbits
   97 0000 789C6366 		.ascii	"x\234cf\300\004R@\254\313\310\300`\017\244\031\231\031"
   97      C0045240 
   97      ACCBC8C0 
@@ -358,7 +358,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
   98      31181819 
   98      EA9918
   99 0025 EB195F32 		.ascii	"\353\031_2}db\234p`\365\014n\365\245\015\015\015\037"
-ARM GAS  /tmp/cce5lor2.s 			page 7
+ARM GAS  /tmp/ccgIuRjT.s 			page 7
 
 
   99      7D64629C 
@@ -418,7 +418,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  111 00f4 453611E8 		.ascii	"E6\021\350~\306\365@\275\367\030\033\037\034}\317\001"
  111      7EC6F540 
  111      BDF7181B 
-ARM GAS  /tmp/cce5lor2.s 			page 8
+ARM GAS  /tmp/ccgIuRjT.s 			page 8
 
 
  111      1F1C7DCF 
@@ -441,7 +441,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  115      00003E2C 
  115      8393
  116              		.text
- 117              		.section	.gnu.lto_stSetAlarm.7f674a85d848e191,"",%progbits
+ 117              		.section	.gnu.lto_stSetAlarm.cfb6f225cdb0d226,"",%progbits
  118 0000 789C9552 		.ascii	"x\234\225R\337KSq\024\377~\276\367\356n:Q)\210\321\203"
  118      DF4B5371 
  118      14FF7EBE 
@@ -478,7 +478,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  125 0082 807F0444 		.ascii	"\200\177\004D\215TT\324\340\263\\\225h\016\365y\355"
  125      8D5454D4 
  125      E0B35C95 
-ARM GAS  /tmp/cce5lor2.s 			page 9
+ARM GAS  /tmp/ccgIuRjT.s 			page 9
 
 
  125      680EF579 
@@ -538,7 +538,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  136      350C5253 
  136      77A8298E 
  137 015c 5AC3FDA9 		.ascii	"Z\303\375\2519}\206\307\2752\036h\334\027\225V\334E"
-ARM GAS  /tmp/cce5lor2.s 			page 10
+ARM GAS  /tmp/ccgIuRjT.s 			page 10
 
 
  137      397D86C7 
@@ -598,7 +598,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  148      A2A2BE88 
  148      8311DBAA 
  148      2A3B
-ARM GAS  /tmp/cce5lor2.s 			page 11
+ARM GAS  /tmp/ccgIuRjT.s 			page 11
 
 
  149 0237 547D60AA 		.ascii	"T}`\252\372\020\332\177\0106;\235\026\225)\0307\005"
@@ -634,7 +634,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  155 02af F82FBEF3 		.ascii	"\370/\276\363M\366"
  155      4DF6
  156              		.text
- 157              		.section	.gnu.lto_stGetAlarm.7f674a85d848e191,"",%progbits
+ 157              		.section	.gnu.lto_stGetAlarm.cfb6f225cdb0d226,"",%progbits
  158 0000 789C9552 		.ascii	"x\234\225RMk\023Q\024}\347\275\231I\332\210\212nB\026"
  158      4D6B1351 
  158      147DE7BD 
@@ -658,7 +658,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  162 004f D4206DBC 		.ascii	"\324 m\274\357%*\261+\007f\336\334{\316\234{\317\275"
  162      EF252AB1 
  162      2B0766DE 
-ARM GAS  /tmp/cce5lor2.s 			page 12
+ARM GAS  /tmp/ccgIuRjT.s 			page 12
 
 
  162      DC7BCE9C 
@@ -718,7 +718,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  173      7CED5429 
  173      26C3E8
  174 0128 E2D7491E 		.ascii	"\342\327I\036\307\325\360\240\345,s\035Ir\224\222\216"
-ARM GAS  /tmp/cce5lor2.s 			page 13
+ARM GAS  /tmp/ccgIuRjT.s 			page 13
 
 
  174      C7D5F0A0 
@@ -778,7 +778,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  185      88F274B8 
  185      94E06692 
  185      28F31EB9 
-ARM GAS  /tmp/cce5lor2.s 			page 14
+ARM GAS  /tmp/ccgIuRjT.s 			page 14
 
 
  186 0203 59787188 		.ascii	"Yxq\210\276V8\236\300d\237\020^IT\334\325\341\322<\351"
@@ -803,7 +803,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  189      17FB051E 
  190 0254 8A       		.ascii	"\212"
  191              		.text
- 192              		.section	.gnu.lto_.symbol_nodes.7f674a85d848e191,"",%progbits
+ 192              		.section	.gnu.lto_.symbol_nodes.cfb6f225cdb0d226,"",%progbits
  193 0000 789C558A 		.ascii	"x\234U\212\273\021\203P\020\003u:`\036\375\270?\021"
  193      BB118350 
  193      1003753A 
@@ -835,10 +835,10 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  199 0068 0EAB792C 		.ascii	"\016\253y,\241"
  199      A1
  200              		.text
- 201              		.section	.gnu.lto_.refs.7f674a85d848e191,"",%progbits
+ 201              		.section	.gnu.lto_.refs.cfb6f225cdb0d226,"",%progbits
  202 0000 789C6366 		.ascii	"x\234cf``\020`\200\000FF&&\026F\026&V\026F6&v\026\006"
  202      60601060 
-ARM GAS  /tmp/cce5lor2.s 			page 15
+ARM GAS  /tmp/ccgIuRjT.s 			page 15
 
 
  202      80004646 
@@ -847,7 +847,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  203 001a 00034700 		.ascii	"\000\003G\000B"
  203      42
  204              		.text
- 205              		.section	.gnu.lto_.decls.7f674a85d848e191,"",%progbits
+ 205              		.section	.gnu.lto_.decls.cfb6f225cdb0d226,"",%progbits
  206 0000 789CB558 		.ascii	"x\234\265XyPT\311\031\177\375z\270\206\001\014&j\370"
  206      795054C9 
  206      197FFD7A 
@@ -898,7 +898,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  216 00b6 45E27888 		.ascii	"E\342x\210m<\3014`\365`\363\301\026#\216\373\010l\030"
  216      6D3CC134 
  216      60F560F3 
-ARM GAS  /tmp/cce5lor2.s 			page 16
+ARM GAS  /tmp/ccgIuRjT.s 			page 16
 
 
  216      C116238E 
@@ -958,7 +958,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  227      6ED999
  228 018e 170DEEB4 		.ascii	"\027\015\356\264v\036q\313\023k\223\235i\255\212\270"
  228      761E71CB 
-ARM GAS  /tmp/cce5lor2.s 			page 17
+ARM GAS  /tmp/ccgIuRjT.s 			page 17
 
 
  228      136B939D 
@@ -1018,7 +1018,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  239      8A319B4A 
  240 026e 9EABB00B 		.ascii	"\236\253\260\013\231\256(#\371a\213zq.\235\252\325f"
  240      99AE2823 
-ARM GAS  /tmp/cce5lor2.s 			page 18
+ARM GAS  /tmp/ccgIuRjT.s 			page 18
 
 
  240      F9618B7A 
@@ -1078,7 +1078,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  252 0343 A1665414 		.ascii	"\241fT\024\367 \306E\005+\023\245\373\232>\234w;b\026"
  252      F720C645 
  252      052B13A5 
-ARM GAS  /tmp/cce5lor2.s 			page 19
+ARM GAS  /tmp/ccgIuRjT.s 			page 19
 
 
  252      FB9A3E9C 
@@ -1138,7 +1138,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  264      5096E4BD 
  264      C9D11A9B 
  264      C7F8B4
-ARM GAS  /tmp/cce5lor2.s 			page 20
+ARM GAS  /tmp/ccgIuRjT.s 			page 20
 
 
  265 0427 8DECBBEC 		.ascii	"\215\354\273\3541\006\244\345]\312\030\242\343\014e"
@@ -1198,7 +1198,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  276      1C56B027 
  276      35949F65 
  276      F24D
-ARM GAS  /tmp/cce5lor2.s 			page 21
+ARM GAS  /tmp/ccgIuRjT.s 			page 21
 
 
  277 0505 6F1CB0B7 		.ascii	"o\034\260\267\331\260\367Q\366~\302>@\331\037$W\357"
@@ -1258,7 +1258,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  288      8D891E14 
  288      B890B8C7 
  288      9326FD
-ARM GAS  /tmp/cce5lor2.s 			page 22
+ARM GAS  /tmp/ccgIuRjT.s 			page 22
 
 
  289 05d8 703BAB2A 		.ascii	"p;\253*\037\215}\341\212;\231\3235\336u\331\205\342"
@@ -1318,7 +1318,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  299      BC94E568 
  300 06a0 5493BB12 		.ascii	"T\223\273\022=\374>t\303\253\234tg\374\232\251\224\216"
  300      3DFC3E74 
-ARM GAS  /tmp/cce5lor2.s 			page 23
+ARM GAS  /tmp/ccgIuRjT.s 			page 23
 
 
  300      C3AB9C74 
@@ -1378,7 +1378,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  311      7C6A2F70 
  311      A15D2E37 
  311      64E88843 
-ARM GAS  /tmp/cce5lor2.s 			page 24
+ARM GAS  /tmp/ccgIuRjT.s 			page 24
 
 
  312 0777 371B64E4 		.ascii	"7\033d\344\250=\322l\337C\217el\264\343\261\267\322"
@@ -1438,7 +1438,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  323      29FAC8E1 
  324 0849 FA34177C 		.ascii	"\3724\027|ZE?=\364N>\030wA>n\276>\344\253B!\357\306"
  324      5A453F3D 
-ARM GAS  /tmp/cce5lor2.s 			page 25
+ARM GAS  /tmp/ccgIuRjT.s 			page 25
 
 
  324      F44E3E18 
@@ -1498,7 +1498,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  335      B0855144 
  336 0926 87673B51 		.ascii	"\207g;Q\212\356wY\215\342\353\010\220\260\027\222J\005"
  336      8AEE7759 
-ARM GAS  /tmp/cce5lor2.s 			page 26
+ARM GAS  /tmp/ccgIuRjT.s 			page 26
 
 
  336      8DE2EB08 
@@ -1558,7 +1558,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  347      7EC3
  348 0a00 B7CBB50C 		.ascii	"\267\313\265\014\013A\334\002\203\375w\031>\013\010"
  348      0B41DC02 
-ARM GAS  /tmp/cce5lor2.s 			page 27
+ARM GAS  /tmp/ccgIuRjT.s 			page 27
 
 
  348      83FD7719 
@@ -1615,10 +1615,10 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  359 0abd 54F06F32 		.ascii	"T\360o2\030u\371"
  359      1875F9
  360              		.text
- 361              		.section	.gnu.lto_.symtab.7f674a85d848e191,"",%progbits
+ 361              		.section	.gnu.lto_.symtab.cfb6f225cdb0d226,"",%progbits
  362 0000 7374496E 		.ascii	"stInit\000\000\000\000\000\000\000\000\000\000\000\000"
  362      69740000 
-ARM GAS  /tmp/cce5lor2.s 			page 28
+ARM GAS  /tmp/ccgIuRjT.s 			page 28
 
 
  362      00000000 
@@ -1678,7 +1678,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  375      702D6431 
  375      36272027 
  376 0066 20272D67 		.ascii	" '-ggdb' '-O2' '-fomit-frame-pointer' '-falign-func"
-ARM GAS  /tmp/cce5lor2.s 			page 29
+ARM GAS  /tmp/ccgIuRjT.s 			page 29
 
 
  376      67646227 
@@ -1699,7 +1699,7 @@ ARM GAS  /tmp/cce5lor2.s 			page 1
  380              		.comm	__gnu_lto_v1,1,1
  381              		.comm	__gnu_lto_slim,1,1
  382              		.ident	"GCC: (15:4.9.3+svn231177-1) 4.9.3 20150529 (prerelease)"
-ARM GAS  /tmp/cce5lor2.s 			page 30
+ARM GAS  /tmp/ccgIuRjT.s 			page 30
 
 
 DEFINED SYMBOLS

@@ -89,7 +89,15 @@ typedef struct{
 		}keyboard;
 }RC_Ctl_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 RC_Ctl_t* RC_get(void);
 void RC_init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

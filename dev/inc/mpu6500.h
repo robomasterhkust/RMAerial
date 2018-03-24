@@ -168,6 +168,7 @@ uint8_t imuGetDataRaw(PIMUStruct pIMU, float AccelRaw[3], float GyroRaw[3]);
 uint8_t imuGetData(PIMUStruct pIMU);
 
 #ifdef __cplusplus
+}
 #endif
 
 #endif /* _MPU6500_H_ */

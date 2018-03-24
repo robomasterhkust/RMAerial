@@ -30,9 +30,7 @@
 #include "dji_open_protocol.hpp"
 #include <dji_vehicle.hpp>
 
-#ifdef STM32
 #include <stdio.h>
-#endif
 
 using namespace DJI;
 using namespace DJI::OSDK;
@@ -608,7 +606,7 @@ OpenProtocol::appHandler(void* protocolHeader)
         if (ACKSessionTab[openHeader->sessionID - 1].sessionStatus ==
             ACK_SESSION_PROCESS)
         {}
-          
+
         else if (ACKSessionTab[openHeader->sessionID - 1].sessionStatus ==
                  ACK_SESSION_IDLE)
         {

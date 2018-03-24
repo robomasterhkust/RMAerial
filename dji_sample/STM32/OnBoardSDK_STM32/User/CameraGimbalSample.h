@@ -28,7 +28,7 @@
 #define CAMERAGIMBALSAMPLE_H
 
 #include "timer.h"
-#include <cstdint>
+#include <stdint.h>
 #include <dji_camera.hpp>
 #include <dji_gimbal.hpp>
 #include <dji_vehicle.hpp>

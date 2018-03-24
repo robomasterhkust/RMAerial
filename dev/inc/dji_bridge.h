@@ -1,13 +1,16 @@
-#include "dji_hard_driver.hpp"
 #include "ch.h"
 #include "hal.h"
 
+#include "dji_hard_driver.hpp"
+#include "STM32F4DataGuard.h"
+
 #define UART_DJI_A3 &UARTD3
 
-class DJI_bridge //: public DJI::OSDK::HardDriver
+class DJI_bridge : public DJI::OSDK::HardDriver
 {
 public:
-  virtual void init(){}
+  virtual void init()
+  {}
 
   virtual size_t send(const uint8_t* buf, size_t len)
   {

@@ -27,7 +27,7 @@
 #ifndef ONBOARDSDK_AES256_H
 #define ONBOARDSDK_AES256_H
 
-#include <stdint.h>
+#include "hal.h"
 
 typedef struct tagAES256Context
 {

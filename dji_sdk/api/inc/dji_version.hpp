@@ -35,7 +35,7 @@
 #define DJI_VERSION_H
 
 #include "dji_command.hpp"
-#include <cstdint>
+#include "hal.h"
 
 namespace DJI
 {

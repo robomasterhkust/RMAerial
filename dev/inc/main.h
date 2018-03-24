@@ -27,7 +27,15 @@
 #include "exti.h"
 #include "imu_temp.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void shellStart(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 bool power_check(void);
 bool power_failure(void);

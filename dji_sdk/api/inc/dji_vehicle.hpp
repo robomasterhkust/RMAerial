@@ -30,7 +30,7 @@
 #ifndef OSDK_CORE_INC_DJI_VEHICLE_H_
 #define OSDK_CORE_INC_DJI_VEHICLE_H_
 
-#include <cstdint>
+#include "hal.h"
 
 #include "dji_broadcast.hpp"
 #include "dji_camera.hpp"
@@ -52,22 +52,15 @@
 #include "dji_vehicle_callback.hpp"
 #include "dji_version.hpp"
 #include "dji_virtual_rc.hpp"
-#ifdef ADVANCED_SENSING
-#include "dji_advanced_sensing.hpp"
-#endif
+
+#include "cppforstm32.h"
 
 /*! Platform includes:
  *  This set of macros figures out which files to include based on your
  * platform.
  */
 
-#ifdef QT
-#include <qt_thread.hpp>
-#elif STM32
 #include <STM32F4DataGuard.h>
-#elif defined(__linux__)
-#include "posix_thread.hpp"
-#endif
 
 namespace DJI
 {
