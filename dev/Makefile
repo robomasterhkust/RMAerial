@@ -102,7 +102,9 @@ include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
+
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
+include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 # Other files (optional).
 #include $(CHIBIOS)/test/rt/test.mk
 
@@ -118,24 +120,22 @@ CSRC = $(STARTUPSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
-       $(TESTSRC) \
-       $(MATHSRC) \
 			 $(FATFSSRC) \
 			 $(CHIBIOS)/os/various/shell.c \
        $(CHIBIOS)/os/various/evtimer.c \
        $(CHIBIOS)/os/various/syscalls.c \
 			 $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
-       flash.c sdlog.c shellcfg.c\
-       mpu6500.c attitude.c ist8310.c math_misc.c \
-       canBusProcess.c dbus.c gimbal.c params.c usbcfg.c \
-       calibrate_sensor.c shoot_pwm.c feeder.c\
-       exti.c imu_temp.c
-
+       flash.c sdlog.c shellcfg.c params.c usbcfg.c exti.c\
+       mpu6500.c attitude.c ist8310.c calibrate_sensor.c math_misc.c imu_temp.c\
+       canBusProcess.c dbus.c osdk_comm.c osdk_topic.c\
+			 gimbal.c shoot_pwm.c feeder.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-CPPSRC = main.cpp	dji_receiver.cpp
+CPPSRC = $(CHCPPSRC) \
+				 main.cpp	\
+				 cppforstm32.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -159,15 +159,14 @@ TCPPSRC =
 
 # List ASM source files here
 ASMSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
-#define SERIAL_CMD       &SDU1
-#define SERIAL_DATA      &SDU1
 INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
-         $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
+         $(HALINC) $(PLATFORMINC) $(BOARDINC) \
          $(CHIBIOS)/dev \
 				 $(FATFSINC) \
          $(CHIBIOS)/os/various \
 				 $(CHIBIOS)/mavlink \
 				 $(CHIBIOS)/os/hal/lib/streams \
+				 $(CHCPPINC) \
 				 inc -lm
 
 ##define SERIAL_CMD       &SDU1

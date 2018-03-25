@@ -14,6 +14,7 @@
     limitations under the License.
 */
 #include "main.h"
+#include "cppforstm32.h"
 
 static BaseSequentialStream* chp = (BaseSequentialStream*)&SDU1;
 
@@ -118,6 +119,7 @@ int main(void)
   attitude_init();
   can_processInit();
   RC_init();
+  osdkComm_init();
 
   while(!power_check())
     chThdSleepMilliseconds(200);

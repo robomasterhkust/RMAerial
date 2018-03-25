@@ -3,6 +3,8 @@
  * @file    shellcfg.c
  * @brief   definitions of shell command functions
  */
+#include "ch.h"
+
 #include "main.h"
 #include "shell.h"
 #include <string.h>
@@ -86,15 +88,8 @@ static THD_WORKING_AREA(Shell_thread_wa, 1024);
 void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
 {
   (void) argc,argv;
-  PIMUStruct PIMU = imu_get();
-  GimbalStruct* gimbal = gimbal_get();
-  RC_Ctl_t* rc = RC_get();
-
-  volatile GimbalEncoder_canStruct* gm =  can_getGimbalMotor();
-
-  chprintf(chp,"accelFiltered[X]: %f\r\n",PIMU->accelFiltered[X]);
-  chprintf(chp,"accelFiltered[Y]: %f\r\n",PIMU->accelFiltered[Y]);
-  chprintf(chp,"accelFiltered[Z]: %f\r\n",PIMU->accelFiltered[Z]);
+  osdk_attitude_subscribe();
+  chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
 }
 
 /**
@@ -239,7 +234,6 @@ void shellStart(void)
    * Note, a delay is inserted in order to not have to disconnect the cable
    * after a reset.
    */
-
 
   usbDisconnectBus(serusbcfg.usbp);
   chThdSleepMilliseconds(1500);

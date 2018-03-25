@@ -241,7 +241,8 @@ static THD_FUNCTION(uart_dbus_thread, p)
            #endif
           )
         )
-        LEDG_TOGGLE();
+        //LEDG_TOGGLE()
+        ;
     }
 
     count++;

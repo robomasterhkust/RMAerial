@@ -14,6 +14,7 @@
 #include "dbus.h"
 #include "params.h"
 #include "sdlog.h"
+#include "osdk_comm.h"
 
 #include "mpu6500.h"
 #include "ist8310.h"
