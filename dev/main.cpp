@@ -118,6 +118,11 @@ int main(void)
   /* Init sequence 2: sensors, comm*/
   attitude_init();
   can_processInit();
+
+  LEDR_ON();
+  chThdSleepSeconds(15);
+  LEDR_OFF();
+
   osdkComm_init();
   RC_init();
 

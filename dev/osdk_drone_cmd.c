@@ -7,6 +7,7 @@
 #include <string.h>
 
 const char activation_string[] = "12345678901234567890123456789012";
+static float init_yaw;
 
 uint16_t droneCmd_activate(uint32_t app_id)
 {
@@ -58,20 +59,33 @@ static void droneCmd_virtualRC_setValue(RC_Ctl_t* const rc,
 {
   if(rc->state == RC_STATE_CONNECTED)
   {
-    vRC->roll     = (uint32_t)(rc->rc.channel0);
-    vRC->pitch    = (uint32_t)(rc->rc.channel1);
-    vRC->throttle = (uint32_t)(rc->rc.channel3);
-    vRC->yaw      = (uint32_t)(rc->rc.channel2);
     switch(rc->rc.s1)
     {
       case RC_S_UP:
-        vRC->gear = 1684; //Down
+        vRC->gear = 1684; //CL on
+
+        float yaw_diff =  osdk_attitude_get_yaw() - init_yaw;
+        float sine   = sinf(yaw_diff),
+              cosine = cosf(yaw_diff);
+        float roll_in  = (float)rc->rc.channel0 - (float)RC_CH_VALUE_OFFSET,
+              pitch_in = (float)rc->rc.channel1 - (float)RC_CH_VALUE_OFFSET;
+
+        vRC->roll  =
+          (uint32_t)(roll_in * cosine + pitch_in * sine + (float)RC_CH_VALUE_OFFSET);
+        vRC->pitch =
+          (uint32_t)(pitch_in * cosine - roll_in * sine + (float)RC_CH_VALUE_OFFSET);
+
+        vRC->throttle = (uint32_t)(rc->rc.channel3);
+        vRC->yaw      = (uint32_t)(rc->rc.channel2);
         break;
+      case RC_S_DOWN: //Takeoff, record the initial YAW angle for CL mode
+        init_yaw = osdk_attitude_get_yaw();
       case RC_S_MIDDLE:
-        vRC->gear = 1324; //Down
-        break;
-      case RC_S_DOWN:
-        vRC->gear = 1324; //Down
+        vRC->gear = 1324; //CL off
+        vRC->roll     = (uint32_t)(rc->rc.channel0);
+        vRC->pitch    = (uint32_t)(rc->rc.channel1);
+        vRC->throttle = (uint32_t)(rc->rc.channel3);
+        vRC->yaw      = (uint32_t)(rc->rc.channel2);
         break;
     }
     switch(rc->rc.s2)

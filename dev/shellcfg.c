@@ -73,11 +73,10 @@ static THD_FUNCTION(matlab_thread, p)
       tick = chVTGetSystemTimeX();
     }
 
-    txbuf_f[0] = (float)(pIMU->euler_angle[Yaw]);
-    txbuf_f[1] = (float)(pIMU->euler_angle[Pitch]);
+    txbuf_f[0] = osdk_attitude_get_yaw();
 
 
-    transmit_matlab(chp, NULL, txbuf_f, 0, 2);
+    transmit_matlab(chp, NULL, txbuf_f, 0, 1);
   }
 }
 
