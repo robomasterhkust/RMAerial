@@ -8,6 +8,12 @@
 
 typedef enum
 {
+  OSDK_TX_NOWAIT = 0,
+  OSDK_TX_WAIT,
+} osdk_wait_tx_t;
+
+typedef enum
+{
   OSDK_RXCHN_STATE_UNINIT = 0,
   OSDK_RXCHN_STATE_UNSTABLE,
   OSDK_RXCHN_STATE_CONNECTING,
@@ -53,8 +59,20 @@ extern "C" {
 osdkComm_t* osdkComm_get(void);
 void osdkComm_init(void);
 
-osdk_timeStamp*   osdk_timeStamp_subscribe(void);
-bool              osdk_timeStamp_check(void);
+uint8_t osdk_StartTX_NoACK(uint8_t* data,
+                           const uint8_t        data_len,
+                           const uint8_t        cmd_set,
+                           const uint8_t        cmd_id,
+                           const osdk_wait_tx_t wait);
+
+uint16_t osdk_StartTX_ACK(uint8_t* data,
+                          const uint8_t        data_len,
+                          const uint8_t        cmd_set,
+                          const uint8_t        cmd_id,
+                          systime_t timeout);
+
+osdk_timeStamp*    osdk_timeStamp_subscribe(void);
+bool               osdk_timeStamp_check(void);
 
 osdk_quaternion*   osdk_attitude_subscribe(void);
 bool               osdk_attitude_check(void);

@@ -40,10 +40,9 @@ bool osdk_attitude_check(void)
 
 float osdk_attitude_get_yaw(void)
 {
-  float yaw;
   chSysLock();
   attitude_received = false;
-  yaw = atan2f(2.0f * (quaternion.q0 * quaternion.q3 + quaternion.q1 * quaternion.q2),
+  float yaw = atan2f(2.0f * (quaternion.q0 * quaternion.q3 + quaternion.q1 * quaternion.q2),
                1.0f - 2.0f * (quaternion.q2 * quaternion.q2 + quaternion.q3 * quaternion.q3));
   chSysUnlock();
 
@@ -66,30 +65,13 @@ void _osdk_topic_decode(const osdk_flight_data_t* const flight_data)
   }
   if(flight_data->flag.attitude)
   {
-
     attitude_received = true;
     if(attitude_subscribed)
     {
       chSysLock();
-      LEDR_TOGGLE();
       memcpy(&quaternion, &(flight_data->data[index]), 16);
       chSysUnlock();
     }
     index += 16;
   }
-  /*
-  switch(message->msgid)
-  {
-    case MAVLINK_MSG_ID_HEARTBEAT:
-    {
-      if(attitude_subscribed)
-      {
-        chSysLock();
-        attitude_received = true;
-        mavlink_msg_heartbeat_decode(message, &heartbeat);
-        chSysUnlock();
-      }
-      break;
-    }
-  }*/
 }

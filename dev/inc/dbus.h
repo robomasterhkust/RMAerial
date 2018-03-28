@@ -9,13 +9,19 @@
 
 #define UART_DBUS                     &UARTD1
 
-#define RC_SAFE_LOCK
+//#define RC_SAFE_LOCK
+/* RC_SAFE_LOCK
+ *	Robot weight > 10kg: 			ALWAYS
+ *	Robot weight <= 10kg: 		OPTIONAL
+ *	DJI drone:								NEVER
+ */
 //#define RC_INFANTRY_HERO
+#define RC_DJI_DRONE
 
 #ifdef RC_SAFE_LOCK
 	#define RC_LOCK_TIME_S		 15
 
-	//Way to unlock: Same as arming a DJI phantom drone
+	//Way to unlock: Same as arming a DJI drone, pull the stick in 外八字
 #endif
 
 #define KEY_V       0x4000
@@ -33,6 +39,12 @@
 #define KEY_A       0x0004
 #define KEY_S       0x0002
 #define KEY_W       0x0001
+
+typedef enum{
+	RC_STATE_UNINIT = 0,
+	RC_STATE_LOST,
+	RC_STATE_CONNECTED,
+} rc_state_t;
 
 typedef enum{
 	RC_S_DUMMY = 0,
@@ -53,6 +65,8 @@ typedef enum{
 #endif
 
 typedef struct{
+		uint8_t state;
+
 		struct{
 			uint16_t channel0;
 			uint16_t channel1;

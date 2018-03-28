@@ -1,20 +1,76 @@
 #include "ch.h"
 #include "hal.h"
 
+#include "osdk_crc.h"
 #include "osdk_comm.h"
 #include <string.h>
 
 static osdkComm_t comm;
 static thread_reference_t osdk_receive_thread_handler = NULL;
+static thread_reference_t osdk_ack_thread_handler = NULL;
+static uint16_t rx_ack = (uint32_t)(-1);
 static uint8_t rxbuf[OSDK_MAX_PACKET_LEN];
 
 static systime_t last_byte;
 static systime_t start_time;
-static uint32_t  init_wait_time;
+static systime_t txEnd_time = 0;
+static systime_t init_wait_time;
+
+static uint32_t tx_seq = 0;
+static osdk_frame_t txframe;
 
 osdkComm_t* osdkComm_get(void)
 {
   return &comm;
+}
+
+static uint16_t osdk_crc16Update(uint16_t crc, uint8_t ch)
+{
+  uint16_t tmp;
+  uint16_t msg;
+
+  msg = 0x00ff & (uint16_t)(ch);
+  tmp = crc ^ msg;
+  crc = (crc >> 8) ^ crc_tab16[tmp & 0xff];
+
+  return crc;
+}
+
+static uint32_t osdk_crc32Update(uint32_t crc, uint8_t ch)
+{
+  uint32_t tmp;  static uint32_t tx_seq = 0;
+  uint32_t msg;
+
+  msg = 0x000000ffL & (uint32_t)(ch);
+  tmp = crc ^ msg;
+  crc = (crc >> 8) ^ crc_tab32[tmp & 0xff];
+  return crc;
+}
+
+uint16_t osdk_crc16Calc(const uint8_t* pMsg)
+{
+  size_t   i;
+  uint16_t wCRC = CRC_INIT;
+
+  for (i = 0; i < OSDK_HEADER_LEN - 2; i++)
+  {
+    wCRC = osdk_crc16Update(wCRC, pMsg[i]);
+  }
+
+  return wCRC;
+}
+
+uint32_t osdk_crc32Calc(const uint8_t* pMsg, size_t nLen)
+{
+  size_t   i;
+  uint32_t wCRC = CRC_INIT;
+
+  for (i = 0; i < nLen; i++)
+  {
+    wCRC = osdk_crc32Update(wCRC, pMsg[i]);
+  }  static uint32_t tx_seq = 0;
+
+  return wCRC;
 }
 
 static void osdkComm_rxchar(void)
@@ -70,6 +126,74 @@ CH_IRQ_HANDLER(STM32_USART3_HANDLER)
   osdkComm_rxchar();
   CH_IRQ_EPILOGUE();
 }
+
+/**
+  * @brief Wait for completion of last uart transmission
+  */
+static void osdk_waitTX(void)
+{
+  chThdSleepUntil(txEnd_time);
+}
+
+uint8_t osdk_StartTX_NoACK(uint8_t* data,
+                           const uint8_t        data_len,
+                           const uint8_t        cmd_set,
+                           const uint8_t        cmd_id,
+                           const osdk_wait_tx_t wait)
+{
+  if(chVTGetSystemTimeX() < txEnd_time) //Last transmission is not completed
+  {
+    if(wait)
+      osdk_waitTX();
+    else
+      return 1;
+  }
+
+  uint8_t data_frame_len = data_len + 2;
+
+  uint8_t* txframe_p = (uint8_t*)&txframe;
+  memset(txframe_p,  0 , OSDK_HEADER_LEN);
+  txframe.start = OSDK_STX;
+  txframe.len   = OSDK_HEADER_LEN + data_frame_len + 4;
+  txframe.seq   = tx_seq++;
+  txframe.crc16 = osdk_crc16Calc(txframe_p);
+
+  txframe.data[0] = cmd_set;
+  txframe.data[1] = cmd_id;
+  memcpy(txframe_p + OSDK_HEADER_LEN + 2, data, data_len);
+
+  uint32_t crc32 = osdk_crc32Calc(txframe_p, OSDK_HEADER_LEN + data_frame_len);
+  *((uint32_t*)(&(txframe.data[data_frame_len]))) = crc32; //Put CRC32 in place
+
+  systime_t tx_start_time = chVTGetSystemTimeX();
+
+  uartStartSend(UART_OSDK, txframe.len, txframe_p);
+
+  txEnd_time = tx_start_time + US2ST((txframe.len)*1e7/UART_OSDK_BR + 800);
+
+  return 0;
+}
+
+uint16_t osdk_StartTX_ACK(uint8_t* data,
+                           const uint8_t        data_len,
+                           const uint8_t        cmd_set,
+                           const uint8_t        cmd_id,
+                          systime_t timeout)
+{
+  osdk_StartTX_NoACK(data, data_len, cmd_set, cmd_id, OSDK_TX_WAIT);
+
+  chSysLock();
+  msg_t rxmsg = chThdSuspendTimeoutS(&osdk_ack_thread_handler, timeout);
+  chSysUnlock();
+
+  if(rxmsg = MSG_TIMEOUT)
+    return (uint16_t)(-1);
+
+  uint16_t result = rx_ack;
+  rx_ack = (uint16_t)(-1);
+  return result;
+}
+
 
 /*
  * UART driver configuration structure.
@@ -131,9 +255,19 @@ static THD_FUNCTION(osdk_rx, p)
     if(end_time > chVTGetSystemTimeX())
       chThdSleepUntil(end_time);
 
-    if(comm.rx_frame->data[0] == OSDK_PUSH_DATA_SET &&
-       comm.rx_frame->data[1] == OSDK_FLIGHT_DATA_ID)
-       _osdk_topic_decode((osdk_flight_data_t*)comm.rx_frame->data);
+    uint32_t crc32 = *(uint32_t*)(rxbuf + comm.rx_frame->len - 4);
+    if(crc32 == osdk_crc32Calc(rxbuf, comm.rx_frame->len - 4))
+    {
+      if(comm.rx_frame->data[0] == OSDK_PUSH_DATA_SET &&
+         comm.rx_frame->data[1] == OSDK_FLIGHT_DATA_ID)
+         _osdk_topic_decode((osdk_flight_data_t*)(comm.rx_frame->data));
+      else if(comm.rx_frame->ack && osdk_ack_thread_handler != NULL)
+      {
+        rx_ack = *((uint16_t*)(&comm.rx_frame->data));
+        chThdResume(&osdk_ack_thread_handler, MSG_OK);
+        osdk_ack_thread_handler = NULL;
+      }
+    }
 
     rxbuf[0] = rxbuf[1] = 0;
   }
@@ -144,5 +278,5 @@ void osdkComm_init(void)
   memset(&comm,0,sizeof(osdkComm_t));
 
   uartStart(UART_OSDK, &uart_cfg);
-  chThdCreateStatic(osdk_rx_wa, sizeof(osdk_rx_wa), NORMALPRIO, osdk_rx ,NULL);
+  chThdCreateStatic(osdk_rx_wa, sizeof(osdk_rx_wa), NORMALPRIO + 4, osdk_rx ,NULL);
 }

@@ -88,8 +88,13 @@ static THD_WORKING_AREA(Shell_thread_wa, 1024);
 void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
 {
   (void) argc,argv;
-  osdk_attitude_subscribe();
   chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
+}
+
+void cmd_activate(BaseSequentialStream * chp, int argc, char *argv[])
+{
+  (void) argc,argv;
+  chprintf(chp,"Activate: %x\r\n",droneCmd_activate(OSDK_APP_ID));
 }
 
 /**
@@ -195,6 +200,7 @@ void cmd_temp(BaseSequentialStream * chp, int argc, char *argv[])
 static const ShellCommand commands[] =
 {
   {"test", cmd_test},
+  {"activate", cmd_activate},
   {"cal", cmd_calibrate},
   {"temp", cmd_temp},
   {"\xEE", cmd_data},

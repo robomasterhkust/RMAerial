@@ -118,13 +118,15 @@ int main(void)
   /* Init sequence 2: sensors, comm*/
   attitude_init();
   can_processInit();
-  RC_init();
   osdkComm_init();
+  RC_init();
+
+  droneCmd_init();
 
   while(!power_check())
     chThdSleepMilliseconds(200);
 
-  /* Init sequence 3: actuators, display*/
+  /* Init sequence 3: actuators, display, drone control*/
   gimbal_init();
   shooter_init();
   feederInit();

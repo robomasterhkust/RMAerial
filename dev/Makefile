@@ -128,7 +128,7 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
        flash.c sdlog.c shellcfg.c params.c usbcfg.c exti.c\
        mpu6500.c attitude.c ist8310.c calibrate_sensor.c math_misc.c imu_temp.c\
-       canBusProcess.c dbus.c osdk_comm.c osdk_topic.c\
+       canBusProcess.c dbus.c osdk_comm.c osdk_topic.c osdk_drone_cmd.c\
 			 gimbal.c shoot_pwm.c feeder.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

@@ -164,6 +164,7 @@ static inline void RC_txCan(CANDriver *const CANx, const uint16_t SID)
 
   canTransmit(CANx, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
 }
+#elif defined(RC_DJI_DRONE)
 #endif
 
 #define  DBUS_INIT_WAIT_TIME_MS      4U
@@ -179,7 +180,6 @@ static THD_FUNCTION(uart_dbus_thread, p)
 
   size_t rx_size;
   msg_t rxmsg;
-  bool rxflag = false;
   systime_t timeout = MS2ST(DBUS_INIT_WAIT_TIME_MS);
   uint32_t count = 0;
 
@@ -194,10 +194,10 @@ static THD_FUNCTION(uart_dbus_thread, p)
 
     if(rxmsg == MSG_OK)
     {
-      if(!rxflag)
+      if(RC_Ctl.state == RC_STATE_LOST)
       {
         timeout = MS2ST(DBUS_WAIT_TIME_MS);
-        rxflag = true;
+        RC_Ctl.state = RC_STATE_CONNECTED;
       }
       else
       {
@@ -216,7 +216,7 @@ static THD_FUNCTION(uart_dbus_thread, p)
     }
     else
     {
-      rxflag = false;
+      RC_Ctl.state = RC_STATE_LOST;//rxflag = false;
       RC_reset();
       timeout = MS2ST(DBUS_INIT_WAIT_TIME_MS);
     }
@@ -231,7 +231,7 @@ static THD_FUNCTION(uart_dbus_thread, p)
       uint32_t blink_count = count / 25;
       if(!(blink_count % 8))
         LEDG_OFF();
-      if(!rxflag ||
+      if(RC_Ctl.state == RC_STATE_LOST ||
           (
            #ifdef RC_SAFE_LOCK
              (lock_state != RC_UNLOCKED && (blink_count % 8 < 2)) ||
@@ -241,7 +241,7 @@ static THD_FUNCTION(uart_dbus_thread, p)
            #endif
           )
         )
-        //LEDG_TOGGLE()
+        LEDG_TOGGLE()
         ;
     }
 
@@ -256,6 +256,7 @@ void RC_init(void)
 {
   RC_reset();
 
+  RC_Ctl.state = RC_STATE_LOST;
   chThdCreateStatic(uart_dbus_thread_wa, sizeof(uart_dbus_thread_wa),
                     NORMALPRIO + 7,
                     uart_dbus_thread, NULL);
