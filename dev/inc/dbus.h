@@ -7,7 +7,8 @@
 #define RC_CH_VALUE_MAX              ((uint16_t)1684)
 #define DBUS_BUFFER_SIZE             ((uint8_t)18)
 
-#define UART_DBUS                     &UARTD1
+#define UART_DBUS_PILOT              &UARTD1
+#define UART_DBUS_GIMBAL             &UARTD4
 
 //#define RC_SAFE_LOCK
 /* RC_SAFE_LOCK
@@ -41,6 +42,11 @@
 #define KEY_W       0x0001
 
 typedef enum{
+	RC_INDEX_PILOT = 0,
+	RC_INDEX_GIMBAL,
+} rc_index_t;
+
+typedef enum{
 	RC_STATE_UNINIT = 0,
 	RC_STATE_LOST,
 	RC_STATE_CONNECTED,
@@ -59,13 +65,13 @@ typedef enum{
 	RC_UNLOCKED
 } rc_lock_state_t;
 
-#ifdef RC_INFANTRY_HERO
-	#include "canBusProcess.h"
-	#define DBUS_CAN 				 &CAND1
-#endif
-
 typedef struct{
 		uint8_t state;
+		uint8_t rxbuf[DBUS_BUFFER_SIZE];
+		bool rx_start_flag;
+
+		UARTDriver* uart;
+		thread_reference_t thread_handler;
 
 		struct{
 			uint16_t channel0;
@@ -107,7 +113,7 @@ typedef struct{
 extern "C" {
 #endif
 
-RC_Ctl_t* RC_get(void);
+RC_Ctl_t* RC_get(const rc_index_t index);
 void RC_init(void);
 
 #ifdef __cplusplus

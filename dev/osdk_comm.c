@@ -10,6 +10,7 @@ static thread_reference_t osdk_receive_thread_handler = NULL;
 static thread_reference_t osdk_ack_thread_handler = NULL;
 static uint16_t rx_ack = (uint32_t)(-1);
 static uint8_t rxbuf[OSDK_MAX_PACKET_LEN];
+static uint32_t rxFrame_cnt = 0;
 
 static systime_t last_byte;
 static systime_t start_time;
@@ -86,7 +87,6 @@ static void osdkComm_rxchar(void)
       case OSDK_RXCHN_STATE_STABLE:
         u->CR1 = cr1 & (~USART_CR1_RXNEIE);
         start_time = chVTGetSystemTimeX();
-        comm.parse_state = OSDK_PARSE_STATE_GOT_STX;
 
         if(osdk_receive_thread_handler != NULL)
         {
@@ -105,7 +105,7 @@ static void osdkComm_rxchar(void)
   }
   else if(comm.rxchn_state == OSDK_RXCHN_STATE_CONNECTING)
   {
-    init_wait_time = chVTGetSystemTimeX() + US2ST((u->DR - 1)*1e7/UART_OSDK_BR) + 100;
+    init_wait_time = chVTGetSystemTimeX() + US2ST((u->DR - 1)*1e7/UART_OSDK_BR) + 20;
     u->CR1 = cr1 & (~USART_CR1_RXNEIE);
 
     chSysLockFromISR();
@@ -246,7 +246,7 @@ static THD_FUNCTION(osdk_rx, p)
     while(!comm.rx_frame->len)
       chThdSleepMicroseconds(100);
 
-    systime_t end_time = start_time + US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 100);
+    systime_t end_time = start_time + US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 20);
     /*
       Transimission time estimation: bytes to transfer *
       (8bits per byte + 1 start bit + 1 stop bit) on UART / UART baudrate + 20us in case we missed the last bit
@@ -260,7 +260,9 @@ static THD_FUNCTION(osdk_rx, p)
     {
       if(comm.rx_frame->data[0] == OSDK_PUSH_DATA_SET &&
          comm.rx_frame->data[1] == OSDK_FLIGHT_DATA_ID)
-         _osdk_topic_decode((osdk_flight_data_t*)(comm.rx_frame->data));
+      {
+        _osdk_topic_decode((osdk_flight_data_t*)(comm.rx_frame->data));
+      }
       else if(comm.rx_frame->ack && osdk_ack_thread_handler != NULL)
       {
         rx_ack = *((uint16_t*)(&comm.rx_frame->data));
@@ -268,6 +270,11 @@ static THD_FUNCTION(osdk_rx, p)
         osdk_ack_thread_handler = NULL;
       }
     }
+
+    rxFrame_cnt++;
+
+    if(!(rxFrame_cnt % 10))
+      LEDG_TOGGLE();
 
     rxbuf[0] = rxbuf[1] = 0;
   }

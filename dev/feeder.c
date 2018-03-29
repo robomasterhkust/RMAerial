@@ -187,7 +187,7 @@ void feederInit(void){
 
 
     feeder_encode = can_getChassisMotor();
-    p_dbus = RC_get();
+    p_dbus = RC_get(RC_INDEX_GIMBAL);
 
     params_set(&vel_pid, 14,4,FEEDER_VEL,subname_feeder_PID,PARAM_PUBLIC);
     params_set(&pos_pid, 15,4,FEEDER_POS,subname_feeder_PID,PARAM_PUBLIC);

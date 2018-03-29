@@ -571,7 +571,7 @@ void gimbal_init(void)
   gimbal_kill();
 
   gimbal._pIMU = imu_get();
-  rc = RC_get();
+  rc = RC_get(RC_INDEX_GIMBAL);
   gimbal._encoder = can_getGimbalMotor();
   chThdSleepMilliseconds(3);
 

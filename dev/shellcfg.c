@@ -75,7 +75,6 @@ static THD_FUNCTION(matlab_thread, p)
 
     txbuf_f[0] = osdk_attitude_get_yaw();
 
-
     transmit_matlab(chp, NULL, txbuf_f, 0, 1);
   }
 }
@@ -88,6 +87,11 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
 {
   (void) argc,argv;
   chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
+
+  RC_Ctl_t* rc1 = RC_get(RC_INDEX_PILOT),
+          * rc2 = RC_get(RC_INDEX_GIMBAL);
+  chprintf(chp, "RC1_1: %d\r\n", rc1->rc.channel0);
+  chprintf(chp, "RC2_1: %d\r\n", rc2->rc.channel0);
 }
 
 void cmd_activate(BaseSequentialStream * chp, int argc, char *argv[])
