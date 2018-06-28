@@ -6,6 +6,8 @@
 #define  UART_OSDK     &UARTD3
 #define  UART_OSDK_BR   115200
 
+#define OSDK_APP_ID 1053960
+
 typedef enum
 {
   OSDK_TX_NOWAIT = 0,
@@ -58,6 +60,7 @@ extern "C" {
 
 osdkComm_t* osdkComm_get(void);
 void osdkComm_init(void);
+uint16_t osdk_activate(uint32_t app_id);
 
 uint8_t osdk_StartTX_NoACK(uint8_t* data,
                            const uint8_t        data_len,

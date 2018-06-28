@@ -14,52 +14,6 @@
 #include "canBusProcess.h"
 #include "can.h"
 
-//comment out the line below to disable motor testing
-#define MOTOR_TEST
-
-/*
- * Turns on all chassis motor for 1 sec when MotorOn is TRUE
- * Thread normally suspended, resumes when shield button is pushed
- * For power module development only
- */
-
-thread_reference_t button_thread_ref = NULL;
-static volatile bool MotorOn = FALSE;
-static THD_WORKING_AREA(MotorToggleThread_wa, 128);
-static THD_FUNCTION(MotorToggleThread, arg) {
-
-  (void)arg;
-  chSysLock();
-  while (TRUE) {
-
-    chSysUnlock();
-    if (MotorOn) {
-
-      MotorOn = FALSE;
-      palSetPad(GPIOA, GPIOA_LED_Y);
-      can_motorSetCurrent(&CAND1, 0x200, 32767, 32767, 32767, 32767);
-      chThdSleepMilliseconds(1000);
-
-    }
-
-    palClearPad(GPIOA, GPIOA_LED_Y);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);    //for some reason multiple calls
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);    //are needed to stop the motors
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    can_motorSetCurrent(&CAND1, 0x200, 0, 0, 0, 0);
-    chSysLock();
-
-    chThdSuspendS(&button_thread_ref);
-
-  }
-}
-
 /*
  * EXTI 10 CALLBACK
  * Configured for motor testing
@@ -69,13 +23,6 @@ static void extcb10(EXTDriver *extp, expchannel_t channel) {
 
   (void)extp;
   (void)channel;
-
-  #ifdef MOTOR_TEST
-    chSysLockFromISR();
-    MotorOn = TRUE;
-    chThdResumeI(&button_thread_ref, MSG_OK);
-    chSysUnlockFromISR();
-  #endif
 
 }
 
@@ -115,7 +62,5 @@ void extiinit(void) {
 
   extStart(&EXTD1, &extcfg);
   extChannelEnable(&EXTD1, 10);
-  chThdCreateStatic(MotorToggleThread_wa, sizeof(MotorToggleThread_wa),
-                    NORMALPRIO, MotorToggleThread, NULL);
 
 }

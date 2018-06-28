@@ -58,7 +58,7 @@ static void droneCmd_virtualRC_cmd(uint8_t enable)
 static void droneCmd_virtualRC_setValue(RC_Ctl_t* const rc1, RC_Ctl_t* const rc2,
                               VirtualRC_Data* const vRC)
 {
-  if(rc1->state == RC_STATE_CONNECTED)
+  if(RC_getState() == RC_UNLOCKED)
   {
     switch(rc1->rc.s1)
     {
@@ -72,9 +72,9 @@ static void droneCmd_virtualRC_setValue(RC_Ctl_t* const rc1, RC_Ctl_t* const rc2
               pitch_in = (float)rc1->rc.channel1 - (float)RC_CH_VALUE_OFFSET;
 
         vRC->roll  =
-          (uint32_t)(roll_in * cosine + pitch_in * sine + (float)RC_CH_VALUE_OFFSET);
+          (uint32_t)(roll_in * cosine - pitch_in * sine + (float)RC_CH_VALUE_OFFSET);
         vRC->pitch =
-          (uint32_t)(pitch_in * cosine - roll_in * sine + (float)RC_CH_VALUE_OFFSET);
+          (uint32_t)(pitch_in * cosine + roll_in * sine + (float)RC_CH_VALUE_OFFSET);
 
         vRC->throttle = (uint32_t)(rc1->rc.channel3);
         vRC->yaw      = (uint32_t)(rc1->rc.channel2);
@@ -114,15 +114,13 @@ static THD_FUNCTION(drone_cmd, p)
 
   systime_t tick = chVTGetSystemTimeX();
 
-  RC_Ctl_t* rc1 = RC_get(RC_INDEX_PILOT);
+  RC_Ctl_t* rc1 = RC_get();
   uint8_t rc_connected = false;
 
   osdkComm_t* comm = osdkComm_get();
   while(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
     chThdSleepMilliseconds(100);
   osdk_attitude_subscribe();
-
-  droneCmd_activate(OSDK_APP_ID);
 
   static VirtualRC_Data vRC;
   droneCmd_virtualRC_init(&vRC);
@@ -138,7 +136,7 @@ static THD_FUNCTION(drone_cmd, p)
     }
 
     droneCmd_virtualRC_setValue(rc1, NULL, &vRC);
-    if(rc1->state == RC_STATE_CONNECTED)
+    if(RC_getState() == RC_UNLOCKED)
     {
       if(!rc_connected)
       {

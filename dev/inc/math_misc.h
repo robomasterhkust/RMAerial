@@ -5,12 +5,8 @@
 
 #define GRAV               9.80665f
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-#define FLT_EPSILON        1.1920929e-07F
-#define M_PI_2_F    (float)(M_PI/2)
+#define FLT_EPSILON        1.1920929e-07f
+#define M_PI_2_F                   M_PI/2
 
 /**
  * @source pixhawk/src/lib/mathlib/math/filter/LowPassFilter2p.cpp
@@ -30,6 +26,18 @@ typedef struct {
   float data[2];
 } lpfilterStruct;
 
+typedef enum {
+  X = 0U,
+  Y = 1U,
+  Z = 2U,
+} axis_mask_t;
+
+typedef enum {
+  Roll = 0U,
+  Pitch = 1U,
+  Yaw = 2U
+} euler_angle_t;
+
 static inline void bound(float* input, const float max)
 {
   if(*input > max)
@@ -43,7 +51,7 @@ static inline float boundOutput(const float input, const float max)
   float output;
   if(input < max && input > -max)
     output = input;
-  else if(input > max)
+  else if(input >= max)
     output = max;
   else
     output = -max;
@@ -147,6 +155,25 @@ static inline void quarternion2euler(const float q[4], float euler_angle[3])
 }
 
 /**
+ * create quaternion from euler angle
+ */
+static inline void euler2quarternion(const float euler_angle[3], float q[4])
+{
+  float cosPhi_2 = cosf(euler_angle[0] / 2.0f);
+  float sinPhi_2 = sinf(euler_angle[0] / 2.0f);
+  float cosTheta_2 = cosf(euler_angle[1] / 2.0f);
+  float sinTheta_2 = sinf(euler_angle[1] / 2.0f);
+  float cosPsi_2 = cosf(euler_angle[2] / 2.0f);
+  float sinPsi_2 = sinf(euler_angle[2] / 2.0f);
+
+
+  q[0] = (cosPhi_2 * cosTheta_2 * cosPsi_2 + sinPhi_2 * sinTheta_2 * sinPsi_2);
+  q[1] = (sinPhi_2 * cosTheta_2 * cosPsi_2 - cosPhi_2 * sinTheta_2 * sinPsi_2);
+  q[2] = (cosPhi_2 * sinTheta_2 * cosPsi_2 + sinPhi_2 * cosTheta_2 * sinPsi_2);
+  q[3] = (cosPhi_2 * cosTheta_2 * sinPsi_2 - sinPhi_2 * sinTheta_2 * cosPsi_2);
+}
+
+/**
  * @source from MatrixMath.cpp from Arduino
  * @brief for known size matrix multiplication, no check
  * A = input matrix (m x p)
@@ -227,5 +254,7 @@ void lpfilter_init(lpfilterStruct* const lp,
   const float sample_freq, const float cutoff_freq);
 
 float lpfilter_apply(lpfilterStruct* const lp, const float input);
+
+bool state_count(const bool statement, const uint16_t count, uint16_t* const curr_count);
 
 #endif

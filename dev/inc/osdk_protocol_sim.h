@@ -11,6 +11,10 @@
 #define OSDK_PUSH_DATA_SET   0x02
 #define OSDK_FLIGHT_DATA_ID  0x00
 
+#define OSDK_ACTIVATION_SET        0x00
+#define OSDK_ACTIVATION_ID         0x01
+#define OSDK_ACTIVATION_KEY        0x03010A00
+
 typedef struct
 {
   bool timestamp          : 1;

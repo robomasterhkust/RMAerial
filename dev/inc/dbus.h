@@ -7,24 +7,17 @@
 #define RC_CH_VALUE_MAX              ((uint16_t)1684)
 #define DBUS_BUFFER_SIZE             ((uint8_t)18)
 
-#define UART_DBUS_PILOT              &UARTD1
-#define UART_DBUS_GIMBAL             &UARTD4
+#define UART_DBUS                     &UARTD1
 
 //#define RC_SAFE_LOCK
-/* RC_SAFE_LOCK
- *	Robot weight > 10kg: 			ALWAYS
- *	Robot weight <= 10kg: 		OPTIONAL
- *	DJI drone:								NEVER
- */
-//#define RC_INFANTRY_HERO
-#define RC_DJI_DRONE
 
 #ifdef RC_SAFE_LOCK
 	#define RC_LOCK_TIME_S		 15
 
-	//Way to unlock: Same as arming a DJI drone, pull the stick in 外八字
+	//Way to unlock: Same as arming a DJI phantom drone
 #endif
 
+/*
 #define KEY_V       0x4000
 #define KEY_C       0x2000
 #define KEY_X       0x1000
@@ -40,17 +33,7 @@
 #define KEY_A       0x0004
 #define KEY_S       0x0002
 #define KEY_W       0x0001
-
-typedef enum{
-	RC_INDEX_PILOT = 0,
-	RC_INDEX_GIMBAL,
-} rc_index_t;
-
-typedef enum{
-	RC_STATE_UNINIT = 0,
-	RC_STATE_LOST,
-	RC_STATE_CONNECTED,
-} rc_state_t;
+*/
 
 typedef enum{
 	RC_S_DUMMY = 0,
@@ -60,19 +43,13 @@ typedef enum{
 } rc_switch_t;
 
 typedef enum{
-	RC_LOCKED = 0,
+	RC_UNCONNECTED = 0,
+	RC_LOCKED,
 	RC_UNLOCKING,
 	RC_UNLOCKED
-} rc_lock_state_t;
+} rc_state_t;
 
 typedef struct{
-		uint8_t state;
-		uint8_t rxbuf[DBUS_BUFFER_SIZE];
-		bool rx_start_flag;
-
-		UARTDriver* uart;
-		thread_reference_t thread_handler;
-
 		struct{
 			uint16_t channel0;
 			uint16_t channel1;
@@ -109,15 +86,14 @@ typedef struct{
 		}keyboard;
 }RC_Ctl_t;
 
-#ifdef __cplusplus
-extern "C" {
+#if defined (RM_INFANTRY) || defined (RM_HERO)
+	#include "canBusProcess.h"
+	#define DBUS_CAN 				 &CAND2
+	void RC_canTxCmd(const uint8_t cmd);
 #endif
 
-RC_Ctl_t* RC_get(const rc_index_t index);
+rc_state_t RC_getState(void);
+RC_Ctl_t* RC_get(void);
 void RC_init(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

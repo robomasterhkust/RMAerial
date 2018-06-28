@@ -14,11 +14,11 @@
     limitations under the License.
 */
 #include "main.h"
-#include "cppforstm32.h"
 
 static BaseSequentialStream* chp = (BaseSequentialStream*)&SDU1;
+static system_init_state_t init_state;
 
-#define MPU6500_UPDATE_PERIOD_US 1000000U/MPU6500_UPDATE_FREQ
+#define ATTITUDE_UPDATE_PERIOD_US 1000000U/ATTITUDE_UPDATE_FREQ
 static THD_WORKING_AREA(Attitude_thread_wa, 4096);
 static THD_FUNCTION(Attitude_thread, p)
 {
@@ -26,58 +26,38 @@ static THD_FUNCTION(Attitude_thread, p)
 
   (void)p;
 
-  PIMUStruct pIMU = imu_get();
-
-  static const IMUConfigStruct imu1_conf =
-    {&SPID5, MPU6500_ACCEL_SCALE_8G, MPU6500_GYRO_SCALE_1000, MPU6500_AXIS_REV_X};
-  imuInit(pIMU, &imu1_conf);
-
-  static const magConfigStruct mag1_conf =
-    {IST8310_ADDR_FLOATING, 200, IST8310_AXIS_REV_NO};
-  ist8310_init(&mag1_conf);
+  PIMUStruct pIMU = adis16470_get();
+  adis16265_conf_t imu_conf = {0x01, ADIS16470_X_REV,
+                                     ADIS16470_Y,
+                                     ADIS16470_Z_REV};
+  adis16470_init(&imu_conf);
+  while(pIMU->state != ADIS16470_READY)
+    chThdSleepMilliseconds(100);
 
   //Check temperature feedback before starting temp controller
-  imuGetData(pIMU);
-  if(pIMU->temperature > 0.0f)
-    tempControllerInit();
-  else
-    pIMU->errorCode |= IMU_TEMP_ERROR;
-
-  while(pIMU->temperature < 61.0f)
-  {
-    imuGetData(pIMU);
-    chThdSleepMilliseconds(50);
-  }
-
-  pIMU->state = IMU_STATE_READY;
   attitude_imu_init(pIMU);
+  init_state = INIT_ATTITUDE_COMPLETE;
 
   uint32_t tick = chVTGetSystemTimeX();
 
   while(true)
   {
-    tick += US2ST(MPU6500_UPDATE_PERIOD_US);
+    tick += US2ST(ATTITUDE_UPDATE_PERIOD_US);
     if(chVTGetSystemTimeX() < tick)
       chThdSleepUntil(tick);
     else
     {
       tick = chVTGetSystemTimeX();
-      pIMU->errorCode |= IMU_LOSE_FRAME;
+      system_setTempWarningFlag();
+      pIMU->error |= ADIS16470_LOSE_FRAME;
     }
 
-    if(pIMU->temperature < 55.0f || pIMU->temperature < 70.0f)
-    pIMU->errorCode |= IMU_TEMP_WARNING;
+    if(pIMU->state == ADIS16470_READY)
+      attitude_update(pIMU);
 
-    imuGetData(pIMU);
-    ist8310_update();
-    attitude_update(pIMU);
-
-    if(pIMU->accelerometer_not_calibrated || pIMU->gyroscope_not_calibrated)
-    {
-      chSysLock();
-      chThdSuspendS(&(pIMU->imu_Thd));
-      chSysUnlock();
-    }
+    #ifdef ATTITUDE_USE_ADIS16470_TIMESTAMP
+      attitude_update_timestamp(pIMU->stamp); //Update timestamp anyway
+    #endif
   }
 }
 
@@ -113,16 +93,20 @@ int main(void)
   /* Init sequence 1: central controllers, loggers*/
   shellStart();
   params_init();
+  can_processInit();
   //sdlog_init();
 
   /* Init sequence 2: sensors, comm*/
-  attitude_init();
-  can_processInit();
 
   LEDR_ON();
   chThdSleepSeconds(15);
   LEDR_OFF();
 
+  system_error_init();
+  feeder_init();
+  gimbal_init();
+
+  attitude_init();
   osdkComm_init();
   RC_init();
 
@@ -132,9 +116,9 @@ int main(void)
     chThdSleepMilliseconds(200);
 
   /* Init sequence 3: actuators, display, drone control*/
-  gimbal_init();
+  gimbal_start();
+  feeder_start();
   shooter_init();
-  feederInit();
 
   wdgStart(&WDGD1, &wdgcfg); //Start the watchdog
 

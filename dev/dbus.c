@@ -8,95 +8,120 @@
 #include "hal.h"
 
 #include "dbus.h"
+//#include "chprintf.h"
+//static BaseSequentialStream* chp = (BaseSequentialStream*)SERIAL_CMD;
 
-static RC_Ctl_t RC_pilot, RC_gimbal;
+static uint8_t rxbuf[DBUS_BUFFER_SIZE];
+static RC_Ctl_t RC_Ctl;
+static thread_reference_t uart_dbus_thread_handler = NULL;
+static uint8_t rx_start_flag = 1;
+
+#if defined (RM_INFANTRY) || defined (RM_HERO)
+  static bool rc_can_flag = false;
+#endif
+
+static rc_state_t rc_state = RC_UNCONNECTED;;
+
+#ifdef RC_SAFE_LOCK
+  systime_t update_time;
+#endif
 
 /**
- * @brief   Decode the received DBUS sequence and store it in RC_pilot struct
+ * @brief   Decode the received DBUS sequence and store it in RC_Ctl struct
  */
-static void decryptDBUS(RC_Ctl_t* rc, const uint8_t* rxbuf)
+static void decryptDBUS(void)
 {
-  rc->rc.channel0 = ((rxbuf[0]) | (rxbuf[1]<<8)) & 0x07FF;
-  rc->rc.channel1 = ((rxbuf[1]>>3) | (rxbuf[2]<<5)) & 0x07FF;
-  rc->rc.channel2 = ((rxbuf[2]>>6) | (rxbuf[3]<<2) | ((uint32_t)rxbuf[4]<<10)) & 0x07FF;
-  rc->rc.channel3 = ((rxbuf[4]>>1) | (rxbuf[5]<<7)) & 0x07FF;
-  rc->rc.s1  = ((rxbuf[5] >> 4)& 0x000C) >> 2;                         //!< Switch left
-  rc->rc.s2  = ((rxbuf[5] >> 4)& 0x0003);
+  #ifdef RC_SAFE_LOCK
+    uint8_t prev_s1 = RC_Ctl.rc.s1,
+            prev_s2 = RC_Ctl.rc.s2;
+  #endif
+
+  RC_Ctl.rc.channel0 = ((rxbuf[0]) | (rxbuf[1]<<8)) & 0x07FF;
+  RC_Ctl.rc.channel1 = ((rxbuf[1]>>3) | (rxbuf[2]<<5)) & 0x07FF;
+  RC_Ctl.rc.channel2 = ((rxbuf[2]>>6) | (rxbuf[3]<<2) | ((uint32_t)rxbuf[4]<<10)) & 0x07FF;
+  RC_Ctl.rc.channel3 = ((rxbuf[4]>>1) | (rxbuf[5]<<7)) & 0x07FF;
+  RC_Ctl.rc.s1  = ((rxbuf[5] >> 4)& 0x000C) >> 2;                         //!< Switch left
+  RC_Ctl.rc.s2  = ((rxbuf[5] >> 4)& 0x0003);
 
 
-  rc->mouse.x = rxbuf[6] | (rxbuf[7] << 8);                   //!< Mouse X axis
-  rc->mouse.y = rxbuf[8] | (rxbuf[9] << 8);                   //!< Mouse Y axis
-  rc->mouse.z = rxbuf[10] | (rxbuf[11] << 8);                 //!< Mouse Z axis
-  rc->mouse.LEFT = rxbuf[12];                                       //!< Mouse Left Is Press ?
-  rc->mouse.RIGHT = rxbuf[13];                                       //!< Mouse Right Is Press ?
-  rc->keyboard.key_code = rxbuf[14] | (rxbuf[15] << 8);                   //!< KeyBoard value
+  RC_Ctl.mouse.x = rxbuf[6] | (rxbuf[7] << 8);                   //!< Mouse X axis
+  RC_Ctl.mouse.y = rxbuf[8] | (rxbuf[9] << 8);                   //!< Mouse RC_LOCKEDY axis
+  RC_Ctl.mouse.z = rxbuf[10] | (rxbuf[11] << 8);               //!< Mouse Z axis
+  RC_Ctl.mouse.LEFT = rxbuf[12];                                       //!< Mouse Left Is Press ?
+  RC_Ctl.mouse.RIGHT = rxbuf[13];                                       //!< Mouse Right Is Press ?
+  RC_Ctl.keyboard.key_code = rxbuf[14] | (rxbuf[15] << 8);                   //!< KeyBoard value
+
+  #ifdef RC_SAFE_LOCK
+    if(rc_state == RC_UNLOCKED &&
+        (RC_Ctl.rc.channel0 != RC_CH_VALUE_OFFSET ||
+         RC_Ctl.rc.channel1 != RC_CH_VALUE_OFFSET ||
+         RC_Ctl.rc.channel2 != RC_CH_VALUE_OFFSET ||
+         RC_Ctl.rc.channel3 != RC_CH_VALUE_OFFSET ||
+         RC_Ctl.rc.s1 != prev_s1 ||
+         RC_Ctl.rc.s2 != prev_s2)
+      )
+      update_time = chVTGetSystemTimeX();
+    else if(rc_state == RC_LOCKED
+      && RC_Ctl.rc.channel0 > RC_CH_VALUE_MAX - 5
+      && RC_Ctl.rc.channel1 < RC_CH_VALUE_MIN + 5
+      && RC_Ctl.rc.channel2 < RC_CH_VALUE_MIN + 5
+      && RC_Ctl.rc.channel3 < RC_CH_VALUE_MIN + 5)
+      rc_state = RC_UNLOCKING;
+
+    else if(rc_state == RC_UNLOCKING
+      && RC_Ctl.rc.channel0 > RC_CH_VALUE_OFFSET - 5 && RC_Ctl.rc.channel0 < RC_CH_VALUE_OFFSET + 5
+      && RC_Ctl.rc.channel1 > RC_CH_VALUE_OFFSET - 5 && RC_Ctl.rc.channel1 < RC_CH_VALUE_OFFSET + 5
+      && RC_Ctl.rc.channel2 > RC_CH_VALUE_OFFSET - 5 && RC_Ctl.rc.channel2 < RC_CH_VALUE_OFFSET + 5
+      && RC_Ctl.rc.channel3 > RC_CH_VALUE_OFFSET - 5 && RC_Ctl.rc.channel3 < RC_CH_VALUE_OFFSET + 5)
+    {
+      update_time = chVTGetSystemTimeX();
+      rc_state = RC_UNLOCKED;
+    }
+  #else
+    rc_state = RC_UNLOCKED;
+  #endif
 }
 
 /*
  * This callback is invoked when a receive buffer has been completely written.
  */
-static void rxend_pilot(UARTDriver *uartp) {
-  if(uartp == UART_DBUS_PILOT)
-  {
-    if(RC_pilot.rx_start_flag)
-    {
-      chSysLockFromISR();
-      chThdResumeI(&(RC_pilot.thread_handler), MSG_OK);
-      chSysUnlockFromISR();
-    }
-    else
-      RC_pilot.rx_start_flag = 1;
-  }
-}
+static void rxend(UARTDriver *uartp) {
 
-/*
- * This callback is invoked when a receive buffer has been completely written.
- */
-static void rxend_gimbal(UARTDriver *uartp) {
-  if(uartp == UART_DBUS_GIMBAL)
+  if(rx_start_flag)
   {
-    if(RC_gimbal.rx_start_flag)
-    {
-      chSysLockFromISR();
-      chThdResumeI(&(RC_gimbal.thread_handler), MSG_OK);
-      chSysUnlockFromISR();
-    }
-    else
-      RC_gimbal.rx_start_flag = 1;
+    chSysLockFromISR();
+    chThdResumeI(&uart_dbus_thread_handler, MSG_OK);
+    chSysUnlockFromISR();
   }
+  else
+    rx_start_flag = 1;
 }
 
 /*
  * UART driver configuration structure.
  */
-static UARTConfig uart_pilot_cfg = {
-  NULL,NULL,rxend_pilot,NULL,NULL,
+static UARTConfig uart_cfg = {
+  NULL,NULL,rxend,NULL,NULL,
   100000,
   USART_CR1_PCE,
   0,
   0
 };
 
-/*
- * UART driver configuration structure.
+/**
+ * @brief   Return the RC_Ctl struct
  */
-static UARTConfig uart_gimbal_cfg = {
-  NULL,NULL,rxend_gimbal,NULL,NULL,
-  100000,
-  USART_CR1_PCE,
-  0,
-  0
-};
+RC_Ctl_t* RC_get(void)
+{
+  return &RC_Ctl;
+}
 
 /**
- * @brief   Return the RC_pilot struct
+ * @brief   Return the RC_Ctl struct
  */
-RC_Ctl_t* RC_get(const rc_index_t index)
+rc_state_t RC_getState(void)
 {
-  if(index == RC_INDEX_PILOT)
-    return &RC_pilot;
-  else if(index == RC_INDEX_GIMBAL)
-    return &RC_gimbal;
+  return rc_state;
 }
 
 /**
@@ -104,72 +129,132 @@ RC_Ctl_t* RC_get(const rc_index_t index)
  * @NOTE  This function is also used as safe lock mechanism for RC controller
  *        S2 is not flushed because it is used to unlock the RC controller
  */
-static void RC_RCreset(RC_Ctl_t* rc)
+static void RC_RCreset(void)
 {
-  rc->rc.channel0 = 1024;
-  rc->rc.channel1 = 1024;
-  rc->rc.channel2 = 1024;
-  rc->rc.channel3 = 1024;
+  RC_Ctl.rc.channel0 = 1024;
+  RC_Ctl.rc.channel1 = 1024;
+  RC_Ctl.rc.channel2 = 1024;
+  RC_Ctl.rc.channel3 = 1024;
 
 }
 
-static void RC_reset(RC_Ctl_t* rc)
+static void RC_reset(void)
 {
-  RC_RCreset(rc);
+  RC_RCreset();
 
-  rc->rc.s1 =0;
-  rc->rc.s2 = 0;
-  rc->mouse.LEFT=0;
-  rc->mouse.RIGHT =0;
-  rc->mouse.x=0;
-  rc->mouse.y=0;
-  rc->mouse.z=0;
-  rc->keyboard.key_code=0;
+  RC_Ctl.rc.s1 =0;
+  RC_Ctl.rc.s2 = 0;
+  RC_Ctl.mouse.LEFT=0;
+  RC_Ctl.mouse.RIGHT =0;
+  RC_Ctl.mouse.x=0;
+  RC_Ctl.mouse.y=0;
+  RC_Ctl.mouse.z=0;
+  RC_Ctl.keyboard.key_code=0;
 }
+
+#if defined (RM_INFANTRY) || defined (RM_HERO)
+static inline void RC_txCan(CANDriver *const CANx, const uint16_t SID)
+{
+  CANTxFrame txmsg;
+  dbus_tx_canStruct txCan;
+
+  txmsg.IDE = CAN_IDE_STD;
+  txmsg.SID = CAN_DBUS_ID;
+  txmsg.RTR = CAN_RTR_DATA;
+  txmsg.DLC = 0x08;
+
+  chSysLock();
+  if(rc_can_flag)
+  {
+    txCan.channel0 = RC_Ctl.rc.channel0;
+    txCan.channel1 = RC_Ctl.rc.channel1;
+    txCan.s1 = RC_Ctl.rc.s1;
+    txCan.s2 = RC_Ctl.rc.s2;
+    txCan.key_code = RC_Ctl.keyboard.key_code;
+    memcpy(&(txmsg.data8), &txCan ,8);
+  }
+  else{
+    txCan.channel0 = -1;
+    txCan.channel1 = -1;
+    txCan.s1 = RC_Ctl.rc.s1;
+    txCan.s2 = RC_Ctl.rc.s2;
+    txCan.key_code = RC_Ctl.keyboard.key_code;
+    memcpy(&(txmsg.data8), &txCan ,8);
+  }
+  chSysUnlock();
+
+  canTransmit(CANx, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+}
+#endif
+
+#if defined (RM_INFANTRY) || defined (RM_HERO)
+void RC_canTxCmd(const uint8_t cmd)
+{
+  rc_can_flag = (cmd == DISABLE ? false : true);
+}
+#endif
 
 #define  DBUS_INIT_WAIT_TIME_MS      4U
 #define  DBUS_WAIT_TIME_MS         100U
-static THD_WORKING_AREA(uart_dbus_pilot_thread_wa, 512);
-static THD_WORKING_AREA(uart_dbus_gimbal_thread_wa, 512);
+static THD_WORKING_AREA(uart_dbus_thread_wa, 512);
 static THD_FUNCTION(uart_dbus_thread, p)
 {
-  RC_Ctl_t* rc = (RC_Ctl_t*)p;
+  (void)p;
   chRegSetThreadName("uart dbus receiver");
 
+  uartStart(UART_DBUS, &uart_cfg);
+  dmaStreamRelease(*UART_DBUS.dmatx);
   msg_t rxmsg;
   systime_t timeout = MS2ST(DBUS_INIT_WAIT_TIME_MS);
-
-  rc->state = RC_STATE_LOST;
+  uint32_t count = 0;
 
   while(!chThdShouldTerminateX())
   {
-    uartStopReceive(rc->uart);
-    uartStartReceive(rc->uart, DBUS_BUFFER_SIZE, rc->rxbuf);
+    uartStopReceive(UART_DBUS);
+    uartStartReceive(UART_DBUS, DBUS_BUFFER_SIZE, rxbuf);
 
     chSysLock();
-    rxmsg = chThdSuspendTimeoutS(&(rc->thread_handler), timeout);
+    rxmsg = chThdSuspendTimeoutS(&uart_dbus_thread_handler, timeout);
     chSysUnlock();
 
     if(rxmsg == MSG_OK)
     {
-      if(rc->state == RC_STATE_LOST)
+      if(!rc_state)
       {
         timeout = MS2ST(DBUS_WAIT_TIME_MS);
-        rc->state = RC_STATE_CONNECTED;
+        #ifdef RC_SAFE_LOCK
+          rc_state = RC_LOCKED;
+        #else
+          rc_state = RC_UNLOCKED;
+        #endif
       }
       else
       {
         chSysLock();
-        decryptDBUS(rc, rc->rxbuf);
+        decryptDBUS();
+
+        #ifdef RC_SAFE_LOCK
+          if(rc_state != RC_UNLOCKED)
+            RC_RCreset();
+          else if(chVTGetSystemTimeX() > update_time + S2ST(RC_LOCK_TIME_S))
+            rc_state = RC_LOCKED;
+        #endif
+
         chSysUnlock();
       }
     }
     else
     {
-      rc->state = RC_STATE_LOST;//rxflag = false;
-      RC_reset(rc);
+      rc_state = RC_UNCONNECTED;
+      RC_reset();
       timeout = MS2ST(DBUS_INIT_WAIT_TIME_MS);
     }
+
+    #if ( defined (RM_INFANTRY) || defined (RM_HERO) ) && !defined(RM_DEBUG)
+        RC_txCan(DBUS_CAN, CAN_DBUS_ID);
+    #endif
+
+    count++;
   }
 }
 
@@ -178,27 +263,9 @@ static THD_FUNCTION(uart_dbus_thread, p)
  */
 void RC_init(void)
 {
-  memset(&RC_pilot, 0 ,sizeof(RC_Ctl_t));
-  memset(&RC_gimbal, 0 ,sizeof(RC_Ctl_t));
+  RC_reset();
 
-  RC_pilot.uart = UART_DBUS_PILOT;
-  RC_pilot.thread_handler = NULL;
-
-  RC_gimbal.uart = UART_DBUS_GIMBAL;
-  RC_gimbal.thread_handler = NULL;
-
-  uartStart(UART_DBUS_PILOT, &uart_pilot_cfg);
-  dmaStreamRelease(*UART_DBUS_PILOT.dmatx);
-  uartStart(UART_DBUS_GIMBAL, &uart_gimbal_cfg);
-  dmaStreamRelease(*UART_DBUS_GIMBAL.dmatx);
-
-  RC_reset(&RC_pilot);
-  RC_reset(&RC_gimbal);
-
-  chThdCreateStatic(uart_dbus_pilot_thread_wa, sizeof(uart_dbus_pilot_thread_wa),
+  chThdCreateStatic(uart_dbus_thread_wa, sizeof(uart_dbus_thread_wa),
                     NORMALPRIO + 7,
-                    uart_dbus_thread, &RC_pilot);
-  chThdCreateStatic(uart_dbus_gimbal_thread_wa, sizeof(uart_dbus_gimbal_thread_wa),
-                    NORMALPRIO + 7,
-                    uart_dbus_thread, &RC_gimbal);
+                    uart_dbus_thread, NULL);
 }

@@ -130,7 +130,7 @@ static void pwm12_start(void)
 
 void shooter_init(void)
 {
-    rc = RC_get(RC_INDEX_GIMBAL);
+    rc = RC_get();
     pwm12_start();
 
     pwm12_setWidth(900);

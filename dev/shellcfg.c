@@ -58,7 +58,7 @@ static THD_FUNCTION(matlab_thread, p)
   float txbuf_f[16];
   BaseSequentialStream* chp = (BaseSequentialStream*)SERIAL_DATA;
 
-  PIMUStruct pIMU = imu_get();
+  PIMUStruct pIMU = adis16470_get();
   GimbalStruct* gimbal = gimbal_get();
 
   uint32_t tick = chVTGetSystemTimeX();
@@ -88,10 +88,6 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
   (void) argc,argv;
   chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
 
-  RC_Ctl_t* rc1 = RC_get(RC_INDEX_PILOT),
-          * rc2 = RC_get(RC_INDEX_GIMBAL);
-  chprintf(chp, "RC1_1: %d\r\n", rc1->rc.channel0);
-  chprintf(chp, "RC2_1: %d\r\n", rc2->rc.channel0);
 }
 
 void cmd_activate(BaseSequentialStream * chp, int argc, char *argv[])
@@ -136,64 +132,63 @@ void cmd_data(BaseSequentialStream * chp, int argc, char *argv[])
 
 void cmd_calibrate(BaseSequentialStream * chp, int argc, char *argv[])
 {
-  PIMUStruct pIMU = imu_get();
+  PIMUStruct pIMU = adis16470_get();
+
+  int32_t accelBias[3], gyroBias[3];
+
+  if(pIMU->state == ADIS16470_READY)
+  {
+    pIMU->state = ADIS16470_CALIBRATING;
+    chThdSleepMilliseconds(10);
+
+    adis16470_get_gyro_bias(gyroBias);
+    adis16470_get_accel_bias(accelBias);
+  }
+  else
+  {
+    chprintf(chp, "IMU initialization not complete \\ Error occured\r\n");
+    return;
+  }
 
   if(argc)
   {
+    gimbal_kill();
+    chprintf(chp, "Calibration in process...\r\n");
+    chThdSleepSeconds(2);
+
     if(!strcmp(argv[0], "accl"))
     {
-      if(pIMU->state == IMU_STATE_READY)
-      {
-        pIMU->accelerometer_not_calibrated = true;
+      adis16470_reset_calibration();
+      calibrate_accelerometer(pIMU, accelBias);
 
-        pIMU->state == IMU_STATE_CALIBRATING;
-
-        chThdSleepMilliseconds(10);
-        calibrate_accelerometer(pIMU);
-        chThdResume(&(pIMU->imu_Thd), MSG_OK);
-
-        pIMU->state == IMU_STATE_READY;
-      }
-      else
-        chprintf(chp, "IMU initialization not complete\r\n");
+      chprintf(chp, "Saving to ADIS16470 flash...\r\n");
+      //adis16470_set_calibration_id(pIMU->calibration_id, 0);
+      adis16470_bias_update(accelBias, gyroBias);
     }
     else if(!strcmp(argv[0], "gyro"))
     {
-      if(pIMU->state == IMU_STATE_READY)
-      {
-        pIMU->gyroscope_not_calibrated = true;
+      adis16470_reset_calibration();
 
-        pIMU->state == IMU_STATE_CALIBRATING;
+      calibrate_gyroscope(pIMU, gyroBias);
 
-        chThdSleepMilliseconds(10);
-        calibrate_gyroscope(pIMU);
-        chThdResume(&(pIMU->imu_Thd), MSG_OK);
-
-        pIMU->state == IMU_STATE_READY;
-      }
-      else
-        chprintf(chp, "IMU initialization not complete\r\n");
-
+      chprintf(chp, "Saving to ADIS16470 flash...\r\n");
+      //adis16470_set_calibration_id(0, pIMU->calibration_id);
+      adis16470_bias_update(accelBias, gyroBias);
     }
-    param_save_flash();
+    else if(!strcmp(argv[0], "res"))
+    {
+      chprintf(chp, "Restoring factory calibration\r\n");
+      adis16470_reset_calibration();
+      chprintf(chp, "Saving to ADIS16470 flash...\r\n");
+      adis16470_bias_update(accelBias, gyroBias);
+    }
   }
   else
     chprintf(chp,"Calibration: gyro, accl\r\n");
-}
 
-void cmd_temp(BaseSequentialStream * chp, int argc, char *argv[])
-{
-  (void) argc,argv;
-
-  //while(1){ // you can uncomment this so that it continuously send the data out.
-  //            // this is useful in tuning the Temperature PID
-      PIMUStruct _pimu = imu_get();
-      TPIDStruct* _tempPID = TPID_get();
-      chprintf(chp,"Temperature: %f\r\n", _pimu->temperature);
-      chprintf(chp,"PID_value: %d\r\n", _tempPID->PID_Value);
-
-      chThdSleepMilliseconds(500);
-  //}
+  pIMU->state = ADIS16470_READY;
+  chThdResume(&(pIMU->imu_Thd), MSG_OK);
+  pIMU->imu_Thd = NULL;
 }
 
 /**
@@ -205,7 +200,6 @@ static const ShellCommand commands[] =
   {"test", cmd_test},
   {"activate", cmd_activate},
   {"cal", cmd_calibrate},
-  {"temp", cmd_temp},
   {"\xEE", cmd_data},
   #ifdef PARAMS_USE_USB
     {"\xFD",cmd_param_scale},

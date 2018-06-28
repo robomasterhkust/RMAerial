@@ -9,6 +9,7 @@
 #include "usbcfg.h"
 #include "flash.h"
 #include "chprintf.h"
+#include "system_error.h"
 
 #include "canBusProcess.h"
 #include "dbus.h"
@@ -17,8 +18,6 @@
 #include "osdk_comm.h"
 #include "osdk_drone_cmd.h"
 
-#include "mpu6500.h"
-#include "ist8310.h"
 #include "attitude.h"
 #include "calibrate_sensor.h"
 
@@ -27,7 +26,18 @@
 #include "feeder.h"
 
 #include "exti.h"
-#include "imu_temp.h"
+
+#define LASER_ON()  (palSetPad(GPIOA, GPIOA_PIN0))
+#define LASER_OFF() (palClearPad(GPIOA, GPIOA_PIN0))
+
+typedef enum {
+  INIT_DUMMY = 0,
+  INIT_SEQUENCE_3_RETURN_1 = 1,
+  INIT_SEQUENCE_3_RETURN_2 = 2,
+  INIT_SEQUENCE_3_RETURN_3 = 4,
+  INIT_ATTITUDE_COMPLETE = 16,
+  INIT_COMPLETE = 32
+} system_init_state_t;
 
 #ifdef __cplusplus
 extern "C" {
