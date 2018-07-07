@@ -8,12 +8,22 @@
 #define OSDK_NON_PAYLOAD_LEN   16U
 #define OSDK_HEADER_LEN        12U
 
-#define OSDK_PUSH_DATA_SET   0x02
-#define OSDK_FLIGHT_DATA_ID  0x00
-
 #define OSDK_ACTIVATION_SET        0x00
+#define OSDK_FWVERSION_ID          0x00
 #define OSDK_ACTIVATION_ID         0x01
-#define OSDK_ACTIVATION_KEY        0x03010A00
+#define OSDK_ACTIVATION_KEY        0x0302240D //"FW: 127646/0LSDK-v1.1 BETA A3-03.02.36.13/0";
+
+#define OSDK_CTRL_CMD_SET         0x01
+#define OSDK_OBTAIN_CTRL_ID       0x00
+#define OSDK_MOVEMENT_CTRL_ID     0x03
+#define OSDK_ARM_CMD_ID           0x05   //NOTE: USE WITH PRECAUTION TO AVOID GETTING KILLED
+
+#define OSDK_PUSH_DATA_SET        0x02
+#define OSDK_FLIGHT_DATA_ID       0x00
+
+#define OSDK_SESSION_NO_NEED_ACK        0U
+#define OSDK_SESSION_NEED_ACK           1U
+#define OSDK_SESSION_REALLY_NEED_ACK    2U
 
 typedef struct
 {
@@ -23,13 +33,15 @@ typedef struct
   bool linear_velocity    : 1;
   bool angular_velocity   : 1;
   bool position           : 1;
+  bool position_detail    : 1;
+  bool RTK                : 1;
   bool magnatometer       : 1;
   bool RC                 : 1;
   bool gimbal             : 1;
   bool flight_status      : 1;
   bool battery            : 1;
   bool device             : 1;
-  uint8_t shit            : 4; //Useless
+  uint8_t shit            : 2; //Useless
 } __attribute__((packed)) osdk_flight_data_flag_t;
 
 typedef struct

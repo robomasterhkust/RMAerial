@@ -4,23 +4,57 @@
 #include "dbus.h"
 #include "osdk_comm.h"
 #include "osdk_drone_cmd.h"
+#include "math_misc.h"
+
 #include <string.h>
-#include <math.h>
 
-const char activation_string[] = "12345678901234567890123456789012";
-static float init_yaw;
+static float   init_yaw;
+static int16_t flight_mode = OSDK_RC_MODE_DUMMY;
 
-uint16_t droneCmd_activate(uint32_t app_id)
+static void droneCmd_OSDK_control(const uint8_t enable)
 {
-  uint8_t activation_seq[44];
-  *((uint32_t*)activation_seq)       = app_id;
-  *((uint32_t*)(activation_seq + 4)) = (uint32_t)2;
-  *((uint32_t*)(activation_seq + 8)) = OSDK_ACTIVATION_KEY;
-  memcpy(activation_seq + 12, activation_string, 32);
+  uint8_t cmd_val = (enable == ENABLE ? 1 : 0);
 
-  uint16_t result = osdk_StartTX_ACK(activation_seq, 44,
-    OSDK_ACTIVATION_SET, OSDK_ACTIVATION_ID, MS2ST(1000));
-  return result;
+  //Send twice as instructed by DJI OSDK manual
+  osdk_StartTX_NoACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
+    OSDK_OBTAIN_CTRL_ID, OSDK_TX_WAIT);
+
+  chThdSleepMilliseconds(100);
+
+  osdk_StartTX_NoACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
+    OSDK_OBTAIN_CTRL_ID, OSDK_TX_WAIT);
+}
+
+void droneCmd_Flight_control(const uint8_t ctrl_mode,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const float yaw)
+{
+  CtrlData_t ctrl;
+
+  ctrl.flag = ctrl_mode;
+  ctrl.x = x;
+  ctrl.y = y;
+  ctrl.z = z;
+  ctrl.yaw = yaw;
+
+  osdk_StartTX_NoACK(&ctrl, sizeof(CtrlData_t), OSDK_CTRL_CMD_SET,
+    OSDK_MOVEMENT_CTRL_ID, OSDK_TX_WAIT);
+}
+
+/*
+ *  @NOTE: This function will arm the drone motor autonomously
+ *         To avoid serious accident, NEVER USE it in lab,
+ *         use ONLY in competition field, simulator, or secured test fields
+ */
+static void droneCmd_armMotor_control(const uint8_t enable)
+{
+  uint8_t cmd_val = (enable == ENABLE ? 1 : 0);
+
+  //Send twice as instructed by DJI OSDK manual
+  osdk_StartTX_NoACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
+    OSDK_ARM_CMD_ID, OSDK_TX_WAIT);
 }
 
 static void droneCmd_virtualRC_reset(VirtualRC_Data* vRC)
@@ -112,16 +146,19 @@ static THD_FUNCTION(drone_cmd, p)
   (void)p;
   chRegSetThreadName("DJI drone CMD host");
 
-  systime_t tick = chVTGetSystemTimeX();
-
   RC_Ctl_t* rc1 = RC_get();
   uint8_t rc_connected = false;
 
   osdkComm_t* comm = osdkComm_get();
   while(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
     chThdSleepMilliseconds(100);
-  osdk_attitude_subscribe();
 
+  osdk_activate(OSDK_APP_ID);
+
+  osdk_attitude_subscribe();
+  osdk_RC* rc = osdk_RC_subscribe();
+
+/*
   static VirtualRC_Data vRC;
   droneCmd_virtualRC_init(&vRC);
 
@@ -154,6 +191,93 @@ static THD_FUNCTION(drone_cmd, p)
       droneCmd_virtualRC_cmd(DISABLE);
       rc_connected = false;
     }
+  }*/
+  const uint8_t flight_mode_A =
+          OSDK_FLIGHT_MODE_HORI_ATTI |
+          OSDK_FLIGHT_MODE_VERT_VEL  |
+          OSDK_FLIGHT_MODE_YAW_RATE  |
+          OSDK_FLIGHT_MODE_GND_FRAME |
+          OSDK_FLIGHT_MODE_NON_STABLE; //W/O guidance sensor
+
+  const uint8_t flight_mode_P =
+          OSDK_FLIGHT_MODE_HORI_VEL  |
+          OSDK_FLIGHT_MODE_VERT_VEL  |
+          OSDK_FLIGHT_MODE_YAW_RATE  |
+          OSDK_FLIGHT_MODE_GND_FRAME |
+          OSDK_FLIGHT_MODE_NON_STABLE; //With guidance sensor or GPS
+
+  uint8_t ctrl_mode = flight_mode_P;
+
+  systime_t tick = chVTGetSystemTimeX();
+  while(true)
+  {
+    tick += US2ST(1e6/DRONE_CMD_FREQ);
+    if(chVTGetSystemTimeX() < tick)
+      chThdSleepUntil(tick);
+    else
+    {
+      tick = chVTGetSystemTimeX();
+    }
+
+    /*TODO: Do something*/
+    if(flight_mode == OSDK_RC_MODE_P_SDK)
+    {
+      float x, y, z, yaw;
+
+      if(ctrl_mode == flight_mode_A)
+      {
+        x = mapInput(rc->pitch,    OSDK_RC_MIN, OSDK_RC_MAX,
+          OSDK_CTRL_HORI_ATTI_MIN, OSDK_CTRL_HORI_ATTI_MAX);
+        y = mapInput(rc->roll,  OSDK_RC_MIN, OSDK_RC_MAX,
+          OSDK_CTRL_HORI_ATTI_MIN, OSDK_CTRL_HORI_ATTI_MAX);
+      }
+      else if(ctrl_mode == flight_mode_P)
+      {
+        x = mapInput(rc->pitch,    OSDK_RC_MIN, OSDK_RC_MAX,
+          OSDK_CTRL_HORI_VEL_MIN,  OSDK_CTRL_HORI_VEL_MAX);
+        y = mapInput(rc->roll,  OSDK_RC_MIN, OSDK_RC_MAX,
+          OSDK_CTRL_HORI_VEL_MIN,  OSDK_CTRL_HORI_VEL_MAX);
+      }
+
+      z = mapInput(rc->throttle, OSDK_RC_MIN, OSDK_RC_MAX,
+        OSDK_CTRL_VERT_VEL_MIN, OSDK_CTRL_VERT_VEL_MAX);
+      yaw = mapInput(rc->yaw,    OSDK_RC_MIN, OSDK_RC_MAX,
+        OSDK_CTRL_YAW_RATE_MIN, OSDK_CTRL_YAW_RATE_MAX);
+
+      //Reversed stick direction to test
+      x = -x;
+      y = -y;
+      yaw = -yaw;
+
+      droneCmd_Flight_control(ctrl_mode, x, y, z, yaw);
+    }
+  }
+}
+
+static THD_WORKING_AREA(dji_sdk_wa, 128);
+static THD_FUNCTION(dji_sdk, p)
+{
+  (void)p;
+  chRegSetThreadName("DJI osdk control");
+
+  osdkComm_t* comm = osdkComm_get();
+  while(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
+    chThdSleepMilliseconds(100);
+
+  osdk_RC* rc = osdk_RC_subscribe();
+
+  while(true)
+  {
+    if(flight_mode != rc->mode)
+    {
+      if(rc->mode == OSDK_RC_MODE_P_SDK)
+        droneCmd_OSDK_control(ENABLE);
+      else
+        droneCmd_OSDK_control(DISABLE);
+    }
+
+    flight_mode = rc->mode;
+    chThdSleepMilliseconds(20);
   }
 }
 
@@ -162,5 +286,8 @@ void droneCmd_init(void)
   if(*UART_OSDK.state != UART_READY)
     return;
 
-  chThdCreateStatic(drone_cmd_wa, sizeof(drone_cmd_wa), NORMALPRIO + 4, drone_cmd ,NULL);
+  chThdCreateStatic(dji_sdk_wa, sizeof(dji_sdk_wa),
+    NORMALPRIO + 4, dji_sdk ,NULL);
+  chThdCreateStatic(drone_cmd_wa, sizeof(drone_cmd_wa),
+    NORMALPRIO - 4, drone_cmd ,NULL);
 }

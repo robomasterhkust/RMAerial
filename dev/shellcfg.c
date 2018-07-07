@@ -88,13 +88,94 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
   (void) argc,argv;
   chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
 
+  osdk_RC* rc = osdk_RC_subscribe();
+  chprintf(chp,"RC_A: %d\r\n",rc->roll);
+  chprintf(chp,"RC_E: %d\r\n",rc->pitch);
+  chprintf(chp,"RC_T: %d\r\n",rc->throttle);
+  chprintf(chp,"RC_R: %d\r\n",rc->yaw);
+
+  chprintf(chp,"RC_mode: %d\r\n",rc->mode);
+}
+
+void cmd_getFWVersion(BaseSequentialStream * chp, int argc, char *argv[])
+{
+  uint8_t cmd_val = 0xFF;
+  osdk_StartTX_ACK(&cmd_val, 1,
+    OSDK_ACTIVATION_SET, OSDK_FWVERSION_ID, OSDK_TX_WAIT);
 }
 
 void cmd_activate(BaseSequentialStream * chp, int argc, char *argv[])
 {
   (void) argc,argv;
-  chprintf(chp,"Activate: %x\r\n",droneCmd_activate(OSDK_APP_ID));
+  chprintf(chp,"Activate: %x\r\n",osdk_activate(OSDK_APP_ID));
 }
+
+#ifdef OSDK_AUTOMATION_TEST_SAFE
+  void cmd_grabCtrl(BaseSequentialStream * chp, int argc, char *argv[])
+  {
+    uint8_t cmd_val = 1; //Grab control with OSDK
+
+    //Send twice as instructed by DJI OSDK manual
+    osdk_StartTX_ACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
+      OSDK_OBTAIN_CTRL_ID, OSDK_TX_WAIT);
+
+    chThdSleepMilliseconds(100);
+
+    osdk_StartTX_ACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
+      OSDK_OBTAIN_CTRL_ID, OSDK_TX_WAIT);
+  }
+
+  void cmd_ARM(BaseSequentialStream * chp, int argc, char *argv[])
+  {
+    uint8_t cmd_val = 1; //Grab control with OSDK
+
+    //Send twice as instructed by DJI OSDK manual
+    osdk_StartTX_ACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
+      OSDK_ARM_CMD_ID, OSDK_TX_WAIT);
+
+  }
+
+  void cmd_flight_ctrl(BaseSequentialStream * chp, int argc, char *argv[])
+  {
+    const uint8_t ctrl_mode = OSDK_FLIGHT_MODE_HORI_VEL   |
+                              OSDK_FLIGHT_MODE_VERT_VEL   |
+                              OSDK_FLIGHT_MODE_YAW_RATE   |
+                              OSDK_FLIGHT_MODE_BODY_FRAME |
+                              OSDK_FLIGHT_MODE_STABLE;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float yaw = 0.0f;
+
+    if(argc)
+    {
+      if(!strcmp(argv[0], "LEFT"))
+        y = -2.0f;
+      else if(!strcmp(argv[0], "RIGHT"))
+        y = 2.0f;
+      else if(!strcmp(argv[0], "FRONT"))
+        x = 2.0f;
+      else if(!strcmp(argv[0], "BACK"))
+        x = -2.0f;
+      else if(!strcmp(argv[0], "UP"))
+        z = 4.0f;
+      else if(!strcmp(argv[0], "DOWN"))
+        z = -4.0f;
+      else if(!strcmp(argv[0], "CW"))
+        yaw = 50.0f;
+      else if(!strcmp(argv[0], "CCW"))
+        yaw = -50.0f;
+
+      chprintf(chp, "Sending flight command: %s\r\n", argv[0]);
+      uint16_t i = 0;
+      while(i++ < 500)
+      {
+        droneCmd_Flight_control(0b01001010, x, y, z, yaw);
+        chThdSleepMilliseconds(2);
+      }
+    }
+  }
+#endif
 
 /**
  * @brief Start the data tramsmission to matlab
@@ -199,6 +280,7 @@ static const ShellCommand commands[] =
 {
   {"test", cmd_test},
   {"activate", cmd_activate},
+  {"fwVersion", cmd_getFWVersion},
   {"cal", cmd_calibrate},
   {"\xEE", cmd_data},
   #ifdef PARAMS_USE_USB
@@ -206,6 +288,11 @@ static const ShellCommand commands[] =
     {"\xFB",cmd_param_update},
     {"\xFA",cmd_param_tx},
     {"\xF9",cmd_param_rx},
+  #endif
+  #ifdef OSDK_AUTOMATION_TEST_SAFE
+    {"grabCtrl", cmd_grabCtrl},
+    {"ARM!", cmd_ARM},
+    {"FLY",  cmd_flight_ctrl},
   #endif
   {NULL, NULL}
 };

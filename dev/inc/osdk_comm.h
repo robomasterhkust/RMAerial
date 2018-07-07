@@ -6,7 +6,7 @@
 #define  UART_OSDK     &UARTD3
 #define  UART_OSDK_BR   115200
 
-#define OSDK_APP_ID 1053960
+#define OSDK_APP_ID   0x4655434B
 
 typedef enum
 {
@@ -80,6 +80,9 @@ bool               osdk_timeStamp_check(void);
 osdk_quaternion*   osdk_attitude_subscribe(void);
 bool               osdk_attitude_check(void);
 float              osdk_attitude_get_yaw(void);
+
+osdk_RC*           osdk_RC_subscribe(void);
+bool               osdk_RC_check(void);
 
 /* Private */
 void _osdk_topic_decode(const osdk_flight_data_t* const flight_data);

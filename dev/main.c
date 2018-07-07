@@ -94,12 +94,11 @@ int main(void)
   shellStart();
   params_init();
   can_processInit();
-  //sdlog_init();
 
   /* Init sequence 2: sensors, comm*/
 
   LEDR_ON();
-  chThdSleepSeconds(15);
+  chThdSleepSeconds(1);
   LEDR_OFF();
 
   system_error_init();
@@ -109,7 +108,6 @@ int main(void)
   attitude_init();
   osdkComm_init();
   RC_init();
-
   droneCmd_init();
 
   while(!power_check())

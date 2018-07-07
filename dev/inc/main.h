@@ -28,7 +28,10 @@
 #include "exti.h"
 
 #define LASER_ON()  (palSetPad(GPIOA, GPIOA_PIN0))
-#define LASER_OFF() (palClearPad(GPIOA, GPIOA_PIN0))
+#define LASER_OFF() (palClearPad(GPIOA, GPIOA_PIN0))4
+
+#define OSDK_AUTOMATION_TEST_SAFE //NOTE: Very dangerous!!
+                                  //Use only in game field, safe test field and simulator
 
 typedef enum {
   INIT_DUMMY = 0,

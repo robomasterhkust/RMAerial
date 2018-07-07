@@ -180,8 +180,32 @@ uint16_t osdk_StartTX_ACK(uint8_t* data,
                            const uint8_t        cmd_id,
                           systime_t timeout)
 {
-  osdk_StartTX_NoACK(data, data_len, cmd_set, cmd_id, OSDK_TX_WAIT);
+  if(chVTGetSystemTimeX() < txEnd_time) //Last transmission is not completed
+    osdk_waitTX();
 
+  uint8_t data_frame_len = data_len + 2;
+
+  uint8_t* txframe_p = (uint8_t*)&txframe;
+  memset(txframe_p,  0 , OSDK_HEADER_LEN);
+  txframe.start = OSDK_STX;
+  txframe.len   = OSDK_HEADER_LEN + data_frame_len + 4;
+  txframe.seq   = tx_seq++;
+  txframe.session   =  OSDK_SESSION_REALLY_NEED_ACK;        //Need ack
+  txframe.crc16 = osdk_crc16Calc(txframe_p);
+
+  txframe.data[0] = cmd_set;
+  txframe.data[1] = cmd_id;
+  memcpy(txframe_p + OSDK_HEADER_LEN + 2, data, data_len);
+
+  uint32_t crc32 = osdk_crc32Calc(txframe_p, OSDK_HEADER_LEN + data_frame_len);
+  *((uint32_t*)(&(txframe.data[data_frame_len]))) = crc32; //Put CRC32 in place
+
+  systime_t tx_start_time = chVTGetSystemTimeX();
+
+  uartStartSend(UART_OSDK, txframe.len, txframe_p);
+
+  txEnd_time = tx_start_time + US2ST((txframe.len)*1e7/UART_OSDK_BR + 800);
+/*
   chSysLock();
   msg_t rxmsg = chThdSuspendTimeoutS(&osdk_ack_thread_handler, timeout);
   chSysUnlock();
@@ -191,7 +215,9 @@ uint16_t osdk_StartTX_ACK(uint8_t* data,
 
   uint16_t result = rx_ack;
   rx_ack = (uint16_t)(-1);
-  return result;
+  return result;*/
+
+  return 0;
 }
 
 
@@ -230,7 +256,11 @@ static uint8_t osdk_get_start(void)
 
 uint16_t osdk_activate(uint32_t app_id)
 {
-  const char activation_string[] = "12345678901234567890123456789012";
+  char activation_string[] = "12345678901234567890123456789012";
+                           //"00000000000000000000000000000000"
+                           //"FW: 127646/0LSDK-v1.1 BETA A3-03.02.36.13/0";
+  activation_string[6] = 0x00;
+  activation_string[35] = 0x00;
 
   uint8_t activation_seq[44];
   *((uint32_t*)activation_seq)       = app_id;
@@ -243,7 +273,7 @@ uint16_t osdk_activate(uint32_t app_id)
   //return result;
 
   osdk_StartTX_NoACK(activation_seq, 44,
-    OSDK_ACTIVATION_SET, OSDK_ACTIVATION_ID, MS2ST(1000));
+    OSDK_ACTIVATION_SET, OSDK_ACTIVATION_ID, OSDK_TX_WAIT);
   return 0;
 }
 
@@ -253,10 +283,6 @@ static THD_FUNCTION(osdk_rx, p)
 {
   (void)p;
   chRegSetThreadName("DJI OSDK receiver");
-
-  osdk_activate(OSDK_APP_ID);
-  chThdSleepMilliseconds(100);
-
   osdk_get_start(); //Discard the first packet, as it may be incorrect
 
   while(!chThdShouldTerminateX())
@@ -267,7 +293,7 @@ static THD_FUNCTION(osdk_rx, p)
     while(!comm.rx_frame->len)
       chThdSleepMicroseconds(100);
 
-    systime_t end_time = start_time + US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 5000);
+    systime_t end_time = start_time + US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 20);
     /*
       Transimission time estimation: bytes to transfer *
       (8bits per byte + 1 start bit + 1 stop bit) on UART / UART baudrate + 20us in case we missed the last bit
@@ -283,21 +309,24 @@ static THD_FUNCTION(osdk_rx, p)
          comm.rx_frame->data[1] == OSDK_FLIGHT_DATA_ID)
       {
         rxFrame_cnt++;
-
-        if(!(rxFrame_cnt % 10))
-          LEDG_TOGGLE();
-
         _osdk_topic_decode((osdk_flight_data_t*)(comm.rx_frame->data));
       }
       else if(comm.rx_frame->ack && osdk_ack_thread_handler != NULL)
       {
         rx_ack = *((uint16_t*)(&comm.rx_frame->data));
-        chThdResume(&osdk_ack_thread_handler, MSG_OK);
-        osdk_ack_thread_handler = NULL;
+        if(osdk_ack_thread_handler == NULL)
+        {
+          chThdResume(&osdk_ack_thread_handler, MSG_OK);
+          osdk_ack_thread_handler = NULL;
+        }
       }
     }
+    LEDG_TOGGLE();
     rxbuf[0] = rxbuf[1] = 0;
-/*
+
+    chThdSleepMilliseconds(3); //Discard unused frames
+
+    /*
     //Found a following packet just after the previous one, Fuck it!! Discard it!!
     if(rxbuf[comm.rx_frame->len] == OSDK_STX)
     {
