@@ -1,7 +1,7 @@
 #ifndef _OSDK_DRONE_CMD_H_
 #define _OSDK_DRONE_CMD_H_
 
-#define DRONE_CMD_FREQ   200U
+#define DRONE_CMD_FREQ   500U
 
 #define OSDK_APP_ID   1053960
 
@@ -28,7 +28,7 @@
 #define OSDK_RC_MODE_P_SDK                10000
 #define OSDK_RC_MODE_P                        0
 #define OSDK_RC_MODE_A                   -10000
-#define OSDK_RC_MODE_DUMMY        (int16_t)(-1)
+#define OSDK_RC_MODE_DUMMY                    0
 
 #define OSDK_FLIGHT_MODE_HORI_ATTI   0b00000000
 #define OSDK_FLIGHT_MODE_HORI_VEL    0b01000000
@@ -116,6 +116,10 @@ void droneCmd_Flight_control(const uint8_t ctrl_mode,
                                     const float y,
                                     const float z,
                                     const float yaw);
+
+//Dangerous functions!!
+void droneCmd_OSDK_control(const uint8_t enable);
+void droneCmd_armMotor_control(const uint8_t enable);
 
 #ifdef __cplusplus
 }

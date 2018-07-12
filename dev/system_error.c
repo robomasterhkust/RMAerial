@@ -2,6 +2,7 @@
 #include "hal.h"
 
 #include "dbus.h"
+#include "sbus.h"
 
 #include "system_error.h"
 
@@ -58,34 +59,30 @@ static THD_FUNCTION(system_error_thd, p)
   LEDG_OFF();
   LEDR_OFF();
 
-  rc_state_t rc_state;
+  rc_state_t   rc_state_slave;
+  SBUS_state_t rc_state_master;
   bool led_on; //Control the toggling of LED
 
   uint32_t count = 0;
   while(true)
   {
     //Control the flashing of green LED // Shift to Error.c
-    rc_state = RC_getState();
+    rc_state_master = SBUS_getState();
+    rc_state_slave  = RC_getState();
     if(!(count % 5))
     {
       uint32_t blink_count = count / 5;
 
-      if(!(blink_count % 10))
-      {
+      if(!(blink_count % 15))
         led_on = false;
-        LEDG_OFF();
-        LEDR_OFF();
-      }
 
-      if(!rc_state ||
-          (
-           #ifdef RC_SAFE_LOCK
-             ((rc_state == RC_LOCKED || rc_state == RC_UNLOCKING) && (blink_count % 10 < 2)) ||
-             (rc_state == RC_UNLOCKED && (blink_count % 10 < 4))
-           #else
-             (blink_count % 10 < 4)
-           #endif
-          )
+      if((!rc_state_slave && rc_state_master != SBUS_CONNECTED)      ||
+         (rc_state_master == SBUS_CONNECTED && !rc_state_slave &&
+           blink_count % 15 < 4)                                     ||
+         (rc_state_slave  && rc_state_master != SBUS_CONNECTED &&
+           blink_count % 15 < 2)                                     ||
+         (rc_state_master == SBUS_CONNECTED && rc_state_slave &&
+           blink_count % 15 < 6)
         )
         {
           led_on = !led_on;

@@ -2,7 +2,8 @@
 #define _OSDK_PROTOCOL_SIM_H_
 
 /* Currently only support length no greater than 255*/
-#define OSDK_MAX_PACKET_LEN   100U
+#define OSDK_MAX_PACKET_LEN        100U
+#define OSDK_MAX_PACKET_LEN_USER   100U
 
 #define OSDK_STX 0xAA
 #define OSDK_NON_PAYLOAD_LEN   16U

@@ -97,16 +97,14 @@ int main(void)
 
   /* Init sequence 2: sensors, comm*/
 
-  LEDR_ON();
-  chThdSleepSeconds(1);
-  LEDR_OFF();
-
   system_error_init();
+
   feeder_init();
   gimbal_init();
 
   attitude_init();
   osdkComm_init();
+  SBUS_init();
   RC_init();
   droneCmd_init();
 
@@ -117,6 +115,7 @@ int main(void)
   gimbal_start();
   feeder_start();
   shooter_init();
+  judgeinit();
 
   wdgStart(&WDGD1, &wdgcfg); //Start the watchdog
 

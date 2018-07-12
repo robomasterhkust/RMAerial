@@ -13,6 +13,7 @@
 
 #include "canBusProcess.h"
 #include "dbus.h"
+#include "sbus.h"
 #include "params.h"
 #include "sdlog.h"
 #include "osdk_comm.h"
@@ -24,6 +25,7 @@
 #include "gimbal.h"
 #include "shoot.h"
 #include "feeder.h"
+#include "judge.h"
 
 #include "exti.h"
 

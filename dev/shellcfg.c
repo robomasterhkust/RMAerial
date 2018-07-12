@@ -88,13 +88,21 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
   (void) argc,argv;
   chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
 
-  osdk_RC* rc = osdk_RC_subscribe();
-  chprintf(chp,"RC_A: %d\r\n",rc->roll);
-  chprintf(chp,"RC_E: %d\r\n",rc->pitch);
-  chprintf(chp,"RC_T: %d\r\n",rc->throttle);
-  chprintf(chp,"RC_R: %d\r\n",rc->yaw);
+  SBUS_t* rc_master = SBUS_get();
+  RC_Ctl_t* rc_slave = RC_get();
 
-  chprintf(chp,"RC_mode: %d\r\n",rc->mode);
+  chprintf(chp,"RC_A: %d\r\n",rc_master->ch1);
+  chprintf(chp,"RC_E: %d\r\n",rc_master->ch2);
+  chprintf(chp,"RC_T: %d\r\n",rc_master->ch3);
+  chprintf(chp,"RC_R: %d\r\n",rc_master->ch4);
+
+  chprintf(chp,"framelost: %d\r\n",rc_master->frame_lost);
+  chprintf(chp,"failsafe: %d\r\n",rc_master->failsafe);
+
+  chprintf(chp,"RC_0: %d\r\n",rc_slave->rc.channel0);
+  chprintf(chp,"RC_1: %d\r\n",rc_slave->rc.channel1);
+  chprintf(chp,"RC_2: %d\r\n",rc_slave->rc.channel2);
+  chprintf(chp,"RC_3: %d\r\n",rc_slave->rc.channel3);
 }
 
 void cmd_getFWVersion(BaseSequentialStream * chp, int argc, char *argv[])
@@ -113,26 +121,12 @@ void cmd_activate(BaseSequentialStream * chp, int argc, char *argv[])
 #ifdef OSDK_AUTOMATION_TEST_SAFE
   void cmd_grabCtrl(BaseSequentialStream * chp, int argc, char *argv[])
   {
-    uint8_t cmd_val = 1; //Grab control with OSDK
-
-    //Send twice as instructed by DJI OSDK manual
-    osdk_StartTX_ACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
-      OSDK_OBTAIN_CTRL_ID, OSDK_TX_WAIT);
-
-    chThdSleepMilliseconds(100);
-
-    osdk_StartTX_ACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
-      OSDK_OBTAIN_CTRL_ID, OSDK_TX_WAIT);
+    droneCmd_OSDK_control(ENABLE);
   }
 
   void cmd_ARM(BaseSequentialStream * chp, int argc, char *argv[])
   {
-    uint8_t cmd_val = 1; //Grab control with OSDK
-
-    //Send twice as instructed by DJI OSDK manual
-    osdk_StartTX_ACK(&cmd_val, 1, OSDK_CTRL_CMD_SET,
-      OSDK_ARM_CMD_ID, OSDK_TX_WAIT);
-
+    droneCmd_armMotor_control(ENABLE);
   }
 
   void cmd_flight_ctrl(BaseSequentialStream * chp, int argc, char *argv[])

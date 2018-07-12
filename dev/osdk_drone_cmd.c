@@ -8,10 +8,11 @@
 
 #include <string.h>
 
+static bool    airborne = false;
 static float   init_yaw;
 static int16_t flight_mode = OSDK_RC_MODE_DUMMY;
 
-static void droneCmd_OSDK_control(const uint8_t enable)
+void droneCmd_OSDK_control(const uint8_t enable)
 {
   uint8_t cmd_val = (enable == ENABLE ? 1 : 0);
 
@@ -48,8 +49,17 @@ void droneCmd_Flight_control(const uint8_t ctrl_mode,
  *         To avoid serious accident, NEVER USE it in lab,
  *         use ONLY in competition field, simulator, or secured test fields
  */
-static void droneCmd_armMotor_control(const uint8_t enable)
+void droneCmd_armMotor_control(const uint8_t enable)
 {
+  osdkComm_t* comm = osdkComm_get();
+  if(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
+    return;
+
+  //===================================================================
+  airborne = true; //TODO: change this to update with osdk flight data;
+  init_yaw = osdk_attitude_get_yaw();
+  //===================================================================
+
   uint8_t cmd_val = (enable == ENABLE ? 1 : 0);
 
   //Send twice as instructed by DJI OSDK manual
@@ -153,11 +163,19 @@ static THD_FUNCTION(drone_cmd, p)
   while(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
     chThdSleepMilliseconds(100);
 
+  chThdSleepMilliseconds(500);
+
   osdk_activate(OSDK_APP_ID);
 
   osdk_attitude_subscribe();
   osdk_RC* rc = osdk_RC_subscribe();
 
+  WAIT_TAKEOFF:
+  while(!airborne) //Wait for aircraft to take off;
+    chThdSleepMilliseconds(100);
+
+  float sine = sinf(init_yaw),
+        cosine = cosf(init_yaw);
 /*
   static VirtualRC_Data vRC;
   droneCmd_virtualRC_init(&vRC);
@@ -245,11 +263,14 @@ static THD_FUNCTION(drone_cmd, p)
         OSDK_CTRL_YAW_RATE_MIN, OSDK_CTRL_YAW_RATE_MAX);
 
       //Reversed stick direction to test
-      x = -x;
-      y = -y;
-      yaw = -yaw;
 
-      droneCmd_Flight_control(ctrl_mode, x, y, z, yaw);
+      float y_out = y * cosine + x * sine,
+            x_out = x * cosine - y * sine;
+
+      droneCmd_Flight_control(ctrl_mode, x_out, y_out, z, yaw);
+
+      if(false) //The drone has landed, waiting to take_off again
+        goto WAIT_TAKEOFF;
     }
   }
 }
@@ -265,6 +286,8 @@ static THD_FUNCTION(dji_sdk, p)
     chThdSleepMilliseconds(100);
 
   osdk_RC* rc = osdk_RC_subscribe();
+
+  chThdSleepSeconds(1);
 
   while(true)
   {
