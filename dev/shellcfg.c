@@ -61,6 +61,8 @@ static THD_FUNCTION(matlab_thread, p)
   PIMUStruct pIMU = adis16470_get();
   GimbalStruct* gimbal = gimbal_get();
 
+  osdk_velocity* vel = osdk_velocity_subscribe();
+
   uint32_t tick = chVTGetSystemTimeX();
   const uint16_t period = US2ST(1000000/HOST_TRANSMIT_FREQ);
   while (!chThdShouldTerminateX())
@@ -73,7 +75,7 @@ static THD_FUNCTION(matlab_thread, p)
       tick = chVTGetSystemTimeX();
     }
 
-    txbuf_f[0] = osdk_attitude_get_yaw();
+    txbuf_f[0] = gimbal->motor[GIMBAL_YAW]._speed;
 
     transmit_matlab(chp, NULL, txbuf_f, 0, 1);
   }
@@ -86,23 +88,77 @@ static THD_WORKING_AREA(Shell_thread_wa, 1024);
 void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
 {
   (void) argc,argv;
-  chprintf(chp,"yaw: %f\r\n",osdk_attitude_get_yaw());
+  PIMUStruct pIMU = adis16470_get();
+  GimbalStruct* gimbal = gimbal_get();
 
-  SBUS_t* rc_master = SBUS_get();
-  RC_Ctl_t* rc_slave = RC_get();
+  chprintf(chp, "Yaw: %f\r\n",  gimbal->motor[GIMBAL_YAW]._speed);
+  chprintf(chp, "YawEnc: %f\r\n", gimbal->motor[GIMBAL_YAW]._speed_enc);
+  chprintf(chp, "Pitch: %f\r\n", gimbal->motor[GIMBAL_PITCH]._speed);
+  chprintf(chp, "PitchEnc: %f\r\n\n\n\n", gimbal->motor[GIMBAL_PITCH]._speed_enc);
+}
 
-  chprintf(chp,"RC_A: %d\r\n",rc_master->ch1);
-  chprintf(chp,"RC_E: %d\r\n",rc_master->ch2);
-  chprintf(chp,"RC_T: %d\r\n",rc_master->ch3);
-  chprintf(chp,"RC_R: %d\r\n",rc_master->ch4);
+void cmd_judgeTest(BaseSequentialStream * chp, int argc, char *argv[])
+{
+  (void) argc,argv;
 
-  chprintf(chp,"framelost: %d\r\n",rc_master->frame_lost);
-  chprintf(chp,"failsafe: %d\r\n",rc_master->failsafe);
+  judge_fb_t* judge = judgeDataGet();
+  chprintf(chp, "Drone HP: %d\r\n", judge->gameInfo.remainHealth);
+  chprintf(chp, "Full HP: %d\r\n", judge->gameInfo.fullHealth);
+  chprintf(chp, "Game status: %d\r\n", judge->gameInfo.gameStatus);
+  chprintf(chp, "Robot Level: %d\r\n", judge->gameInfo.robotLevel);
+  chprintf(chp, "Heat: %d\r\n", judge->powerInfo.shooterHeat0);
+}
 
-  chprintf(chp,"RC_0: %d\r\n",rc_slave->rc.channel0);
-  chprintf(chp,"RC_1: %d\r\n",rc_slave->rc.channel1);
-  chprintf(chp,"RC_2: %d\r\n",rc_slave->rc.channel2);
-  chprintf(chp,"RC_3: %d\r\n",rc_slave->rc.channel3);
+
+void cmd_error(BaseSequentialStream * chp, int argc, char *argv[])
+{
+  uint32_t error;
+
+  //Initialization error
+  //error = init_state_get();
+  //if(error & INIT_SEQUENCE_3_RETURN_1)
+  //  chprintf(chp,"E:INIT SEQ 3 FAILED -- GIMBAL YAW NOT CONNECTED\r\n");
+  //if(error & INIT_SEQUENCE_3_RETURN_2)
+  //  chprintf(chp,"E:INIT SEQ 3 FAILED -- GIMBAL PITCH NOT CONNECTED\r\n");
+
+  //Gimbal error
+  error = gimbal_get_error();
+  if(error & GIMBAL_YAW_NOT_CONNECTED)
+    chprintf(chp,"E:GIMBAL YAW CONNECTION LOST\r\n");
+  if(error & GIMBAL_PITCH_NOT_CONNECTED)
+    chprintf(chp,"E:GIMBAL PITCH CONNECTION LOST\r\n");
+  if(error & GIMBAL_CONTROL_LOSE_FRAME)
+    chprintf(chp,"W:Gimbal control lose frame\r\n");
+
+  //IMU error
+  error = adis16470_get_error();
+  PIMUStruct pIMU = adis16470_get();
+  if(error & ADIS16470_AXIS_CONF_ERROR)
+    chprintf(chp,"E:IMU COORDINATE CONFIGURATION ERROR\r\n");
+  if(error & ADIS16470_SENSOR_ERROR)
+    chprintf(chp,"E:ADIS16470 SENSOR ERROR: %X\r\n", pIMU->diag_stat);
+  if(error & ADIS16470_READING_ERROR)
+    chprintf(chp,"E:ADIS16470 READING ERROR\r\n");
+  if(error & ADIS16470_UNCONNECTED)
+    chprintf(chp,"E:ADIS16470 SENSOR UNCONNECTED\r\n");
+  if(error & ADIS16470_ACCEL_NOT_CALIBRATED)
+    chprintf(chp,"W:ADIS16470 Accelerometer not calibrated\r\n");
+  if(error & ADIS16470_GYRO_NOT_CALIBRATED)
+    chprintf(chp,"W:ADIS16470 Gyroscope not calibrated\r\n");
+  if(error & ADIS16470_DATA_INVALID)
+    chprintf(chp,"W:ADIS16470 has invalid reading\r\n");
+  if(error & ADIS16470_LOSE_FRAME)
+    chprintf(chp,"W:Attitude estimator lose frame\r\n");
+  adis16470_clear_error();
+
+  //feeder error
+  if(feeder_get_error())
+    chprintf(chp, "E: FEEDER MOTOR NOT CONNECTED\r\n");
+
+  if(osdkComm_getError() & OSDK_RX_TIMEOUT)
+    chprintf(chp, "W: OSDK RX TIMEOUT OCCURED\r\n");
+
+  system_clearWarningFlag();
 }
 
 void cmd_getFWVersion(BaseSequentialStream * chp, int argc, char *argv[])
@@ -205,67 +261,6 @@ void cmd_data(BaseSequentialStream * chp, int argc, char *argv[])
   }
 }
 
-void cmd_calibrate(BaseSequentialStream * chp, int argc, char *argv[])
-{
-  PIMUStruct pIMU = adis16470_get();
-
-  int32_t accelBias[3], gyroBias[3];
-
-  if(pIMU->state == ADIS16470_READY)
-  {
-    pIMU->state = ADIS16470_CALIBRATING;
-    chThdSleepMilliseconds(10);
-
-    adis16470_get_gyro_bias(gyroBias);
-    adis16470_get_accel_bias(accelBias);
-  }
-  else
-  {
-    chprintf(chp, "IMU initialization not complete \\ Error occured\r\n");
-    return;
-  }
-
-  if(argc)
-  {
-    gimbal_kill();
-    chprintf(chp, "Calibration in process...\r\n");
-    chThdSleepSeconds(2);
-
-    if(!strcmp(argv[0], "accl"))
-    {
-      adis16470_reset_calibration();
-      calibrate_accelerometer(pIMU, accelBias);
-
-      chprintf(chp, "Saving to ADIS16470 flash...\r\n");
-      //adis16470_set_calibration_id(pIMU->calibration_id, 0);
-      adis16470_bias_update(accelBias, gyroBias);
-    }
-    else if(!strcmp(argv[0], "gyro"))
-    {
-      adis16470_reset_calibration();
-
-      calibrate_gyroscope(pIMU, gyroBias);
-
-      chprintf(chp, "Saving to ADIS16470 flash...\r\n");
-      //adis16470_set_calibration_id(0, pIMU->calibration_id);
-      adis16470_bias_update(accelBias, gyroBias);
-    }
-    else if(!strcmp(argv[0], "res"))
-    {
-      chprintf(chp, "Restoring factory calibration\r\n");
-      adis16470_reset_calibration();
-      chprintf(chp, "Saving to ADIS16470 flash...\r\n");
-      adis16470_bias_update(accelBias, gyroBias);
-    }
-  }
-  else
-    chprintf(chp,"Calibration: gyro, accl\r\n");
-
-  pIMU->state = ADIS16470_READY;
-  chThdResume(&(pIMU->imu_Thd), MSG_OK);
-  pIMU->imu_Thd = NULL;
-}
-
 /**
  * @brief array of shell commands, put the corresponding command and functions below
  * {"command", callback_function}
@@ -275,7 +270,8 @@ static const ShellCommand commands[] =
   {"test", cmd_test},
   {"activate", cmd_activate},
   {"fwVersion", cmd_getFWVersion},
-  {"cal", cmd_calibrate},
+  {"judge", cmd_judgeTest},
+  {"WTF", cmd_error},
   {"\xEE", cmd_data},
   #ifdef PARAMS_USE_USB
     {"\xFD",cmd_param_scale},

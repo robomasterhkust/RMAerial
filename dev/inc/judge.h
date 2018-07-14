@@ -180,13 +180,12 @@ typedef struct user_data_t{
   uint8_t       mask;
 }__attribute__((packed)) user_data_t;
 
-#endif 
+#endif
 
-judge_fb_t judgeDataGet(void);
+judge_fb_t* judgeDataGet(void);
 
 void judgedecode(void);
 
 void judgeinit(void);
 
 #endif /* INC_JUDGE_H_ */
-

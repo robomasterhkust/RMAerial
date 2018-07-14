@@ -73,16 +73,16 @@ static THD_FUNCTION(system_error_thd, p)
     {
       uint32_t blink_count = count / 5;
 
-      if(!(blink_count % 15))
+      if(!(blink_count % 14))
         led_on = false;
 
       if((!rc_state_slave && rc_state_master != SBUS_CONNECTED)      ||
          (rc_state_master == SBUS_CONNECTED && !rc_state_slave &&
-           blink_count % 15 < 4)                                     ||
+           blink_count % 14 < 4)                                     ||
          (rc_state_slave  && rc_state_master != SBUS_CONNECTED &&
-           blink_count % 15 < 2)                                     ||
+           blink_count % 14 < 2)                                     ||
          (rc_state_master == SBUS_CONNECTED && rc_state_slave &&
-           blink_count % 15 < 6)
+           blink_count % 14 < 6)
         )
         {
           led_on = !led_on;

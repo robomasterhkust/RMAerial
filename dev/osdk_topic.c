@@ -45,6 +45,23 @@ float osdk_attitude_get_yaw(void)
   return yaw;
 }
 
+static osdk_velocity   velocity;
+static bool            velocity_subscribed = false;
+static bool            velocity_received   = false;
+
+osdk_RC* osdk_velocity_subscribe(void)
+{
+  velocity_subscribed = true;
+  return &velocity;
+}
+
+bool osdk_velocity_check(void)
+{
+  bool result = velocity_received;
+  velocity_received = false;
+  return result;
+}
+
 static osdk_RC         rc;
 static bool            rc_subscribed = false;
 static bool            rc_received   = false;
@@ -91,6 +108,12 @@ void _osdk_topic_decode(const osdk_flight_data_t* const flight_data)
   }
   if(flight_data->flag.linear_velocity)
   {
+    if(velocity_subscribed)
+    {
+      chSysLock();
+      memcpy(&velocity, &(flight_data->data[index]), sizeof(osdk_velocity));
+      chSysUnlock();
+    }
     index += sizeof(osdk_velocity);
   }
   if(flight_data->flag.position)

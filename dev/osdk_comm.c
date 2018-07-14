@@ -20,9 +20,16 @@ static systime_t init_wait_time;
 static uint32_t tx_seq = 0;
 static osdk_frame_t txframe;
 
+static osdk_error_t error;
+
 osdkComm_t* osdkComm_get(void)
 {
   return &comm;
+}
+
+osdk_error_t osdkComm_getError(void)
+{
+  return error;
 }
 
 static uint16_t osdk_crc16Update(uint16_t crc, uint8_t ch)
@@ -180,9 +187,10 @@ uint8_t osdk_StartTX_NoACK(uint8_t* data,
 
   systime_t tx_start_time = chVTGetSystemTimeX();
 
+  uartStopSend(UART_OSDK);
   uartStartSend(UART_OSDK, txframe.len, txframe_p);
 
-  txEnd_time = tx_start_time + US2ST((txframe.len)*1e7/UART_OSDK_BR + 800);
+  txEnd_time = tx_start_time + US2ST((txframe.len)*1e7/UART_OSDK_BR + 200);
 
   return 0;
 }
@@ -217,18 +225,7 @@ uint16_t osdk_StartTX_ACK(uint8_t* data,
 
   uartStartSend(UART_OSDK, txframe.len, txframe_p);
 
-  txEnd_time = tx_start_time + US2ST((txframe.len)*1e7/UART_OSDK_BR + 800);
-/*
-  chSysLock();
-  msg_t rxmsg = chThdSuspendTimeoutS(&osdk_ack_thread_handler, timeout);
-  chSysUnlock();
-
-  if(rxmsg = MSG_TIMEOUT)
-    return (uint16_t)(-1);
-
-  uint16_t result = rx_ack;
-  rx_ack = (uint16_t)(-1);
-  return result;*/
+  txEnd_time = tx_start_time + US2ST((txframe.len)*1e7/UART_OSDK_BR + 200);
 
   return 0;
 }
@@ -249,15 +246,18 @@ static UARTConfig uart_cfg = {
   0
 };
 
-static inline void osdk_startRX(uint8_t *const buf, const uint16_t len)
+#define OSDK_RX_TIMEOUT_MS    200U
+static inline msg_t osdk_startRX(uint8_t *const buf, const uint16_t len)
 {
   uartStopReceive(UART_OSDK);
   uartStartReceive(UART_OSDK, OSDK_MAX_PACKET_LEN * 5, buf);
   (*UART_OSDK).usart->CR1 |= USART_CR1_RXNEIE;
 
   chSysLock();
-  chThdSuspendS(&osdk_receive_thread_handler);
+  msg_t result = chThdSuspendTimeoutS(&osdk_receive_thread_handler, MS2ST(OSDK_RX_TIMEOUT_MS));
   chSysUnlock();
+
+  return result;
 }
 
 static uint8_t osdk_get_start(void)
@@ -304,14 +304,20 @@ static THD_FUNCTION(osdk_rx, p)
   osdk_get_start(); //Discard the first packet, as it may be incorrect
   while(!chThdShouldTerminateX())
   {
-      osdk_startRX(rxbuf, OSDK_MAX_PACKET_LEN);
+      msg_t result = osdk_startRX(rxbuf, OSDK_MAX_PACKET_LEN);
+
+      if(result == MSG_TIMEOUT)
+      {
+        system_setTempWarningFlag();
+        continue;
+      }
 
       comm.rx_frame = (osdk_frame_t*)rxbuf;
 
       while(!comm.rx_frame->len)
         chThdSleepMicroseconds(100);
 
-      systime_t end_time = start_time + US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 200);
+      systime_t end_time = start_time + US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 5000);
       /*
         Transimission time estimation: bytes to transfer *
         (8bits per byte + 1 start bit + 1 stop bit) on UART / UART baudrate + 200us in case we missed the last bit
@@ -340,14 +346,14 @@ static THD_FUNCTION(osdk_rx, p)
         }
       }
 
-      chThdSleepMilliseconds(2); //Discard unused frames
+      chThdSleepMilliseconds(80); //Discard unused frames
 
       //Found a following packet just after the previous one, Fuck it!! Discard it!!
 
       if(rxbuf[comm.rx_frame->len] == OSDK_STX)
       {
         comm.rx_frame = (osdk_frame_t*)(&rxbuf[comm.rx_frame->len]);
-        end_time += US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 200);
+        end_time += US2ST((comm.rx_frame->len)*1e7/UART_OSDK_BR + 5000);
         if(end_time > chVTGetSystemTimeX())
           chThdSleepUntil(end_time);
       }

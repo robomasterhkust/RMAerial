@@ -256,10 +256,8 @@ static void* datagroups[JUDGE_DATA_TYPES + 1];
 /*
  * returns all judgment system sata
  */
-judge_fb_t judgeDataGet(void) {
-
-  return judgeInData;
-
+judge_fb_t* judgeDataGet(void) {
+  return &judgeInData;
 }
 
 /*
@@ -320,7 +318,6 @@ static THD_FUNCTION(JudgeThread, arg) {
                              SERIAL_EVT_MASK, serial_wkup_flags);   //setup event listening
 
   while (!chThdShouldTerminateX()) {
-
 
     chEvtWaitAny(1);                                                //wait for selected serial events
     chSysLock();
@@ -472,8 +469,6 @@ void judgeinit(void) {
 
   judgedatainit();
 
-  palSetPadMode(GPIOG, 14, PAL_MODE_ALTERNATE(8));              //UART6 TX
-  palSetPadMode(GPIOG, 9, PAL_MODE_ALTERNATE(8));               //UART6 RX
   sdStart(SERIAL_JUDGE, &SERIAL_JUDGE_CONFIG);                  //Start Serial Driver
   chThdCreateStatic(JudgeThread_wa, sizeof(JudgeThread_wa),     //Start Judge RX thread
                     NORMALPRIO + 5, JudgeThread, NULL);

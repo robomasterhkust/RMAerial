@@ -46,6 +46,12 @@ typedef enum
   OSDK_FRAME_TYPE_ACK,
 } osdk_frame_type_t; ///< The state machine for the comm parser
 
+typedef enum
+{
+  OSDK_OK=0,
+  OSDK_RX_TIMEOUT = 1,
+} osdk_error_t; ///< The state machine for the comm parser
+
 typedef struct
 {
   osdk_frame_type_t                type;
@@ -60,6 +66,7 @@ extern "C" {
 
 osdkComm_t* osdkComm_get(void);
 void osdkComm_init(void);
+osdk_error_t osdkComm_getError(void);
 uint16_t osdk_activate(uint32_t app_id);
 
 uint8_t osdk_StartTX_NoACK(uint8_t* data,

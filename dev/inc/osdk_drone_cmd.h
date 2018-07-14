@@ -25,9 +25,18 @@
 #define OSDK_CTRL_YAW_RATE_MAX           100.0f     // degree/s
 #define OSDK_CTRL_YAW_RATE_MIN          -100.0f
 
-#define OSDK_RC_MODE_P_SDK                10000
-#define OSDK_RC_MODE_P                        0
-#define OSDK_RC_MODE_A                   -10000
+#define USER_CTRL_HORI_ATTI_MAX           30.0f     // degree
+#define USER_CTRL_HORI_ATTI_MIN          -30.0f
+#define USER_CTRL_HORI_VEL_MAX             4.0f     // m/s
+#define USER_CTRL_HORI_VEL_MIN            -4.0f
+#define USER_CTRL_VERT_VEL_MAX             6.0f     // m/s
+#define USER_CTRL_VERT_VEL_MIN            -6.0f
+#define USER_CTRL_YAW_RATE_MAX           100.0f     // degree/s
+#define USER_CTRL_YAW_RATE_MIN          -100.0f
+
+#define OSDK_RC_MODE_P_SDK                1541U
+#define OSDK_RC_MODE_P                    1024U
+#define OSDK_RC_MODE_FAILSAFE              511U
 #define OSDK_RC_MODE_DUMMY                    0
 
 #define OSDK_FLIGHT_MODE_HORI_ATTI   0b00000000

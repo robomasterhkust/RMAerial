@@ -9,11 +9,15 @@
 
 #define UART_SBUS                     &UARTD4
 
+//wheel: 				ch5  364-1684
+//left switch:  ch6	 511,1024,1541
+//right switch: ch7	 511,1024,1541
+
 typedef enum{
 	SBUS_S_DUMMY = 0,
-	SBUS_S_UP = 1,
-	SBUS_S_DOWN = 2,
-	SBUS_S_MIDDLE = 3,
+	SBUS_S_UP = 1541,
+	SBUS_S_DOWN = 511,
+	SBUS_S_MIDDLE = 1024,
 } SBUS_switch_t;
 
 typedef enum{

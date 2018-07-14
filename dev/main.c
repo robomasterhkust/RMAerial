@@ -27,9 +27,9 @@ static THD_FUNCTION(Attitude_thread, p)
   (void)p;
 
   PIMUStruct pIMU = adis16470_get();
-  adis16265_conf_t imu_conf = {0x01, ADIS16470_X_REV,
-                                     ADIS16470_Y,
-                                     ADIS16470_Z_REV};
+  adis16265_conf_t imu_conf = {0x01, ADIS16470_Y,
+                                     ADIS16470_X_REV,
+                                     ADIS16470_Z};
   adis16470_init(&imu_conf);
   while(pIMU->state != ADIS16470_READY)
     chThdSleepMilliseconds(100);
@@ -99,23 +99,25 @@ int main(void)
 
   system_error_init();
 
-  feeder_init();
-  gimbal_init();
-
-  attitude_init();
-  osdkComm_init();
   SBUS_init();
   RC_init();
+  feeder_init();
+  gimbal_init();
+  osdkComm_init();
   droneCmd_init();
+  judgeinit();
 
   while(!power_check())
     chThdSleepMilliseconds(200);
 
+  attitude_init();
+  chThdSleepSeconds(5);
+
   /* Init sequence 3: actuators, display, drone control*/
+
   gimbal_start();
   feeder_start();
-  shooter_init();
-  judgeinit();
+  shooter_start();
 
   wdgStart(&WDGD1, &wdgcfg); //Start the watchdog
 

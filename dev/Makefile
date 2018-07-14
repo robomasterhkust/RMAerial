@@ -130,7 +130,7 @@ CSRC = $(STARTUPSRC) \
        adis16470.c attitude.c calibrate_sensor.c math_misc.c\
        canBusProcess.c dbus.c sbus.c osdk_comm.c osdk_topic.c osdk_drone_cmd.c\
 			 gimbal.c shoot_pwm.c feeder.c barrelStatus.c judge.c\
-			 main.c
+			 main.c keyboard.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

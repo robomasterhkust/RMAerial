@@ -2,17 +2,18 @@
 #define _SHOOT_H_
 
 #define SHOOTER_USE_RC
+// #define SHOOTER_SETUP
+// void pwm12_setWidth(uint16_t width);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void shooter_setRuneState(const uint8_t enable); //User set shooter to rune mode
+void shooter_start(void);
 
-void shooter_control(uint16_t setpoint);
-void shooter_init(void);
-
-#ifdef __cplusplus
-}
-#endif
-
+typedef struct
+{
+	uint8_t rune_speed;
+	uint8_t fast_speed;
+	uint8_t slow_speed;
+	uint8_t stop;
+}speed_mode_t;
 
 #endif
