@@ -3,8 +3,10 @@
 
 #include "sbus.h"
 #include "dbus.h"
+#include "params.h"
 #include "osdk_comm.h"
 #include "osdk_drone_cmd.h"
+#include "gimbal.h"
 #include "math_misc.h"
 
 #include <string.h>
@@ -12,6 +14,8 @@
 static bool    airborne = false;
 static float   init_yaw;
 static int16_t flight_mode = OSDK_RC_MODE_DUMMY;
+
+static pi_controller_t yaw_tracker;
 
 static SBUS_t* rc_master;
 
@@ -69,6 +73,13 @@ void droneCmd_armMotor_control(const uint8_t enable)
     OSDK_ARM_CMD_ID, OSDK_TX_WAIT);
 }
 
+static float yaw_tracking(float error)
+{
+  yaw_tracker.error_int += error * yaw_tracker.ki;
+  bound(&(yaw_tracker.error_int),  yaw_tracker.error_int_max);
+
+  return error * yaw_tracker.kp + yaw_tracker.error_int;
+}
 
 static THD_WORKING_AREA(drone_cmd_wa, 1024);
 static THD_FUNCTION(drone_cmd, p)
@@ -79,6 +90,8 @@ static THD_FUNCTION(drone_cmd, p)
   RC_Ctl_t* rc_slave = RC_get();
 
   osdkComm_t* comm = osdkComm_get();
+  GimbalStruct* gimbal = gimbal_get();
+
   while(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
     chThdSleepMilliseconds(100);
 
@@ -167,14 +180,19 @@ static THD_FUNCTION(drone_cmd, p)
         USER_CTRL_VERT_VEL_MIN, USER_CTRL_VERT_VEL_MAX);
 
       if(RC_getState() == RC_UNLOCKED)
-        yaw = mapInput(rc_slave->rc.channel2,  RC_CH_VALUE_MIN, RC_CH_VALUE_MAX,
-          USER_CTRL_YAW_RATE_MIN, USER_CTRL_YAW_RATE_MAX);
+      {
+        yaw = mapInput(rc_slave->rc.channel2,  RC_CH_VALUE_MIN , RC_CH_VALUE_MAX,
+          -GIMBAL_MAX_SPEED_YAW * 180.0f/ M_PI ,
+           GIMBAL_MAX_SPEED_YAW * 180.0f/ M_PI);
+        bound(&yaw, USER_CTRL_YAW_RATE_MAX);
+      }
       else
         yaw = mapInput(rc_master->ch4,  SBUS_CH_VALUE_MIN, SBUS_CH_VALUE_MAX,
           USER_CTRL_YAW_RATE_MIN, USER_CTRL_YAW_RATE_MAX);
 
       //PID tracking controller for gimbal heading
-      float yaw_feedback = 0.0f;
+
+      float yaw_feedback = yaw_tracking(gimbal->d_yaw);
       yaw += yaw_feedback;
 
       float y_out = y * cosine + x * sine,
@@ -212,8 +230,13 @@ static THD_FUNCTION(dji_sdk, p)
   }
 }
 
+static const char tracker_name[]  = "Tracker";
+
 void droneCmd_init(void)
 {
+  params_set(&yaw_tracker, 17, 2, tracker_name, subname_PI,PARAM_PUBLIC);
+  yaw_tracker.error_int_max = 50.0f;
+
   if(*UART_OSDK.state != UART_READY)
     return;
 

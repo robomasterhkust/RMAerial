@@ -118,12 +118,12 @@ static void gimbal_attiCmd(const float dt, const float yaw_theta1)
         pitch_speed_limit = gimbal.motor[GIMBAL_PITCH]._speed + gimbal.motor[GIMBAL_PITCH]._speed_enc;
 
   //Need to check signs here
-  if((gimbal.state & GIMBAL_YAW_AT_UP_LIMIT && input_z > yaw_speed_limit) ||
-      (gimbal.state & GIMBAL_YAW_AT_LOW_LIMIT && input_z < yaw_speed_limit))
+  if((gimbal.state & GIMBAL_YAW_AT_LEFT_LIMIT && input_z > yaw_speed_limit) ||
+      (gimbal.state & GIMBAL_YAW_AT_RIGHT_LIMIT && input_z < yaw_speed_limit))
     input_z = yaw_speed_limit;
 
-  if((gimbal.state & GIMBAL_PITCH_AT_UP_LIMIT && input_y > pitch_speed_limit) ||
-      (gimbal.state & GIMBAL_PITCH_AT_LOW_LIMIT && input_y < pitch_speed_limit))
+  if((gimbal.state & GIMBAL_PITCH_AT_UP_LIMIT && input_y < pitch_speed_limit) ||
+      (gimbal.state & GIMBAL_PITCH_AT_LOW_LIMIT && input_y > pitch_speed_limit))
     input_y = pitch_speed_limit;
 
 /*
@@ -175,20 +175,20 @@ static void gimbal_checkLimit(void)
   float yaw_diff = gimbal.motor[GIMBAL_YAW]._angle - yaw_init_pos,
         pitch_diff = gimbal.motor[GIMBAL_PITCH]._angle - pitch_init_pos;
 
-  if(yaw_diff < -gimbal.axis_limit[GIMBAL_YAW] - AXIS_LIMIT_TH2)
-    gimbal.state |= GIMBAL_YAW_AT_LOW_LIMIT;
-  else if(yaw_diff > gimbal.axis_limit[GIMBAL_YAW] + AXIS_LIMIT_TH2)
-    gimbal.state |= GIMBAL_YAW_AT_UP_LIMIT;
-  else if(yaw_diff < gimbal.axis_limit[GIMBAL_YAW] &&
-          yaw_diff > -gimbal.axis_limit[GIMBAL_YAW])
-    gimbal.state &= ~(GIMBAL_YAW_AT_UP_LIMIT | GIMBAL_YAW_AT_LOW_LIMIT);
+  if(yaw_diff < -gimbal.axis_limit[0] - AXIS_LIMIT_TH2)
+    gimbal.state |= GIMBAL_YAW_AT_LEFT_LIMIT;
+  else if(yaw_diff > gimbal.axis_limit[0] + AXIS_LIMIT_TH2)
+    gimbal.state |= GIMBAL_YAW_AT_RIGHT_LIMIT;
+  else if(yaw_diff < gimbal.axis_limit[0] &&
+          yaw_diff > -gimbal.axis_limit[0])
+    gimbal.state &= ~(GIMBAL_YAW_AT_LEFT_LIMIT | GIMBAL_YAW_AT_RIGHT_LIMIT);
 
-  if(pitch_diff < -gimbal.axis_limit[GIMBAL_PITCH] - AXIS_LIMIT_TH2)
+  if(pitch_diff < -gimbal.axis_limit[2] - AXIS_LIMIT_TH2)
     gimbal.state |= GIMBAL_PITCH_AT_LOW_LIMIT;
-  else if(pitch_diff > gimbal.axis_limit[GIMBAL_PITCH] + AXIS_LIMIT_TH2)
+  else if(pitch_diff > gimbal.axis_limit[1] + AXIS_LIMIT_TH2)
     gimbal.state |= GIMBAL_PITCH_AT_UP_LIMIT;
-  else if(pitch_diff < gimbal.axis_limit[GIMBAL_PITCH] &&
-          pitch_diff > -gimbal.axis_limit[GIMBAL_PITCH])
+  else if(pitch_diff < gimbal.axis_limit[1] &&
+          pitch_diff > -gimbal.axis_limit[2])
     gimbal.state &= ~(GIMBAL_PITCH_AT_UP_LIMIT | GIMBAL_PITCH_AT_LOW_LIMIT);
 
 }
@@ -207,7 +207,7 @@ static void gimbal_checkLimit(void)
 #define GIMBAL_MIN_ANGLE 1.25664f
 
 #define GIMBAL_ANGLE_PSC 7.6699e-4 //2*M_PI/0x1FFF
-#define GIMBAL_CONNECTION_ERROR_COUNT 50U
+#define GIMBAL_CONNECTION_ERROR_COUNT 100U
 
 #define MOTOR_SPEED_ENC_TH_1  0.0f
 #define MOTOR_SPEED_ENC_TH_2  0.15f
@@ -617,7 +617,7 @@ const char limit_name[] = "Gimbal axis limit";
 const char subname_axis[]  = "Yaw Pitch";
 const char subname_ff[]    = "Yaw_w1 Pitch_w Yaw_SD Pitch_a Yaw_w2 Yaw_th";
 const char subname_accl[]  = "YawX YawY YawZ PitchX PitchY PitchZ";
-const char limit_subname[] = "Yaw_range Pitch_range";
+const char limit_subname[] = "Yaw_range Pitch_up Pitch_low";
 
 
 /*
@@ -662,7 +662,7 @@ void gimbal_init(void)
   params_set(gimbal.axis_ff_ext,    2, 6,   axis_ff_name,   subname_ff,       PARAM_PUBLIC);
   params_set(gimbal.axis_ff_accel,  6, 6,   accl_name,      subname_accl,     PARAM_PUBLIC);
   params_set(gimbal.axis_ff_int,    9, 2,   ff_int_name,    subname_axis,     PARAM_PUBLIC);
-  params_set(gimbal.axis_limit,     10, 2,  limit_name,     limit_subname,    PARAM_PUBLIC);
+  params_set(gimbal.axis_limit,     10, 3,  limit_name,     limit_subname,    PARAM_PUBLIC);
 
   params_set(&_yaw_pos,   3, 3, yaw_pos_name,   subname_PID,   PARAM_PUBLIC);
   params_set(&_pitch_pos, 4, 3, pitch_pos_name, subname_PID,   PARAM_PUBLIC);

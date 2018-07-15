@@ -332,9 +332,9 @@ static THD_FUNCTION(feeder_control, p){
     }
 }
 
-static const FEEDER_VEL  = "FEEDER_VEL";
-static const FEEDER_POS  = "FEEDER_POS";
-static const FEEDER_rest_name = "FEEDER_REST";
+static const char FEEDER_VEL[]  = "FEEDER_VEL";
+static const char FEEDER_POS[]  = "FEEDER_POS";
+static const char FEEDER_rest_name[] = "FEEDER_REST";
 static const char subname_feeder_PID[] = "KP KI KD Imax";
 void feeder_init(void){
 

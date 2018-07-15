@@ -33,8 +33,8 @@ typedef enum {
   GIMBAL_STATE_READY,
   GIMBAL_STATE_FALLOFF,               //The vehicle is turned over
   GIMBAL_STATE_180DEG_TRANSITION,     //Reserved for sentry gimbal
-  GIMBAL_YAW_AT_UP_LIMIT = 1 << 7,
-  GIMBAL_YAW_AT_LOW_LIMIT = 1 << 6,
+  GIMBAL_YAW_AT_LEFT_LIMIT = 1 << 7,
+  GIMBAL_YAW_AT_RIGHT_LIMIT = 1 << 6,
   GIMBAL_PITCH_AT_UP_LIMIT = 1 << 5,
   GIMBAL_PITCH_AT_LOW_LIMIT = 1 << 4,
 } gimbal_state_t;

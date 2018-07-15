@@ -91,10 +91,7 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
   PIMUStruct pIMU = adis16470_get();
   GimbalStruct* gimbal = gimbal_get();
 
-  chprintf(chp, "Yaw: %f\r\n",  gimbal->motor[GIMBAL_YAW]._speed);
-  chprintf(chp, "YawEnc: %f\r\n", gimbal->motor[GIMBAL_YAW]._speed_enc);
-  chprintf(chp, "Pitch: %f\r\n", gimbal->motor[GIMBAL_PITCH]._speed);
-  chprintf(chp, "PitchEnc: %f\r\n\n\n\n", gimbal->motor[GIMBAL_PITCH]._speed_enc);
+  chprintf(chp, "Drone yaw: %f\r\n\n\n\n", osdk_attitude_get_yaw());
 }
 
 void cmd_judgeTest(BaseSequentialStream * chp, int argc, char *argv[])

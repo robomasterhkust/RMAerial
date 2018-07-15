@@ -111,12 +111,12 @@ int main(void)
     chThdSleepMilliseconds(200);
 
   attitude_init();
-  chThdSleepSeconds(5);
+  chThdSleepSeconds(3);
 
   /* Init sequence 3: actuators, display, drone control*/
 
   gimbal_start();
-  feeder_start();
+  //feeder_start();
   shooter_start();
 
   wdgStart(&WDGD1, &wdgcfg); //Start the watchdog
