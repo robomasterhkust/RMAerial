@@ -12,6 +12,8 @@
 #include "hal.h"
 #include "exti.h"
 #include "canBusProcess.h"
+
+#include "feeder.h"
 #include "can.h"
 
 /*
@@ -19,11 +21,14 @@
  * Configured for motor testing
  * Resumes MotorToggleThread
  */
-static void extcb10(EXTDriver *extp, expchannel_t channel) {
+static void extcb(EXTDriver *extp, expchannel_t channel) {
 
   (void)extp;
   (void)channel;
 
+  chSysLockFromISR();
+  feeder_bulletOut();
+  chSysUnlockFromISR();
 }
 
 /*
@@ -34,7 +39,7 @@ static const EXTConfig extcfg = {
   {
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI0
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI1
-    {EXT_CH_MODE_DISABLED, NULL},   //EXTI2
+    {EXT_CH_MODE_FALLING_EDGE | EXT_CH_MODE_AUTOSTART | EXT_MODE_GPIOI, extcb},   //EXTI2
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI3
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI4
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI5
@@ -42,7 +47,7 @@ static const EXTConfig extcfg = {
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI7
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI8
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI9
-    {EXT_CH_MODE_FALLING_EDGE | EXT_CH_MODE_AUTOSTART | EXT_MODE_GPIOF, extcb10},   //EXTI10, RMShield Pushbutton
+    {EXT_CH_MODE_DISABLED, NULL},   //EXTI10, RMShield Pushbutton
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI11
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI12
     {EXT_CH_MODE_DISABLED, NULL},   //EXTI13
@@ -61,6 +66,6 @@ static const EXTConfig extcfg = {
 void extiinit(void) {
 
   extStart(&EXTD1, &extcfg);
-  extChannelEnable(&EXTD1, 10);
+  extChannelEnable(&EXTD1, 2);
 
 }

@@ -94,10 +94,12 @@ int main(void)
   shellStart();
   params_init();
   can_processInit();
+  extiinit();
 
   /* Init sequence 2: sensors, comm*/
 
   system_error_init();
+  palSetPad(GPIOA, GPIOA_PIN0);
 
   SBUS_init();
   RC_init();
@@ -116,7 +118,7 @@ int main(void)
   /* Init sequence 3: actuators, display, drone control*/
 
   gimbal_start();
-  //feeder_start();
+  feeder_start();
   shooter_start();
 
   wdgStart(&WDGD1, &wdgcfg); //Start the watchdog

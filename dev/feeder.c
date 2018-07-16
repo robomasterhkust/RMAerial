@@ -9,6 +9,8 @@
 
 #include "feeder.h"
 
+#define RM_DEBUG
+
 static int16_t FEEDER_SPEED_SP_RPM  = 0;
 #define FEEDER_TURNBACK_ANGLE   360.0f / FEEDER_BULLET_PER_TURN     //165.0f;
 
@@ -25,8 +27,8 @@ static thread_reference_t rune_singleShot_thread = NULL;
 static uint8_t feeder_error_flag;
 
 #define FEEDER_BOOST_SETSPEED_SINGLE    20  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN
-#define FEEDER_BOOST_SETSPEED_AUTO      30  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN
-#define FEEDER_TEST_SETSPEED             3  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN
+#define FEEDER_BOOST_SETSPEED_AUTO      40  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN
+#define FEEDER_TEST_SETSPEED             5  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN
 #define FEEDER_BOOST_PERIOD_MS          30
 
 static float bullet_delay;
@@ -278,29 +280,30 @@ static THD_FUNCTION(feeder_control, p){
         }
 
         if(barrel_info->heatLimit == DRONE_HEATLIMIT){
-          level = 3;
-          FEEDER_SPEED_SP_RPM = 10  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN;
+           level = 3;
+           FEEDER_SPEED_SP_RPM = 20  * FEEDER_GEAR * 60 / FEEDER_BULLET_PER_TURN;
         }
         else
         {
-          #ifdef RM_DEBUG
-            level = -1;
-            barrel_info->heatLimit = -1;
-            FEEDER_SPEED_SP_RPM = FEEDER_TEST_SETSPEED;
-          #else
-            //system_setWarningFlag(); //No judgement system data
-          #endif
+           #ifdef RM_DEBUG
+             level = -1;
+             barrel_info->heatLimit = 65535;
+             barrel_info->currentHeatValue = 0;
+             FEEDER_SPEED_SP_RPM = FEEDER_TEST_SETSPEED;
+           #else
+             system_setWarningFlag(); //No judgement system data
+           #endif
         }
 
         if(feeder_mode == FEEDER_OVERHEAT){
-          if(barrel_info->currentHeatValue < barrel_info->heatLimit - 40){
-            feeder_mode = FEEDER_STOP;
-          }
-        }
-        else if(level != -1 && feeder_mode != FEEDER_OVERHEAT &&
-          barrel_info->currentHeatValue > barrel_info->heatLimit - 15){
-          feeder_brake();
-          feeder_mode = FEEDER_OVERHEAT;
+           if(barrel_info->currentHeatValue < barrel_info->heatLimit - 40){
+             feeder_mode = FEEDER_STOP;
+           }
+         }
+        else if(feeder_mode != FEEDER_OVERHEAT &&
+           barrel_info->currentHeatValue > barrel_info->heatLimit - 15){
+           feeder_brake();
+           feeder_mode = FEEDER_OVERHEAT;
         }
 
         if(
