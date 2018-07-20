@@ -9,8 +9,6 @@
 
 #include "feeder.h"
 
-#define RM_DEBUG
-
 static int16_t FEEDER_SPEED_SP_RPM  = 0;
 #define FEEDER_TURNBACK_ANGLE   360.0f / FEEDER_BULLET_PER_TURN     //165.0f;
 

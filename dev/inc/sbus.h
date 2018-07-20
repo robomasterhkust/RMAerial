@@ -20,6 +20,12 @@ typedef enum{
 	SBUS_S_MIDDLE = 1024,
 } SBUS_switch_t;
 
+//SBUS CONFIGURATION:
+//					LEFT SWITCH									RIGHT SWITCH
+//UP				Flight mode SDK							Player attention
+//MIDDLE		Flight mode P								Idle
+//DOWN			Failsafe flight mode G			System failure
+
 typedef enum{
 	SBUS_UNCONNECTED = 0,
 	SBUS_OFFLINE,

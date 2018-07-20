@@ -91,7 +91,11 @@ void cmd_test(BaseSequentialStream * chp, int argc, char *argv[])
   PIMUStruct pIMU = adis16470_get();
   GimbalStruct* gimbal = gimbal_get();
 
-  chprintf(chp, "Drone yaw: %f\r\n\n\n\n", osdk_attitude_get_yaw());
+  chprintf(chp, "Drone yaw: %f\r\n", osdk_attitude_get_yaw());
+
+  osdk_battery* battery = osdk_battery_subscribe();
+  chprintf(chp, "Battery Volt: %f\r\n", battery->voltage);
+  chprintf(chp, "Battery Percent: %f\r\n\n\n\n", battery->percentage);
 }
 
 void cmd_judgeTest(BaseSequentialStream * chp, int argc, char *argv[])

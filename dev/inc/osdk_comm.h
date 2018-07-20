@@ -91,6 +91,9 @@ float              osdk_attitude_get_yaw(void);
 osdk_RC*           osdk_RC_subscribe(void);
 bool               osdk_RC_check(void);
 
+osdk_battery* osdk_battery_subscribe(void);
+bool osdk_battery_check(void);
+
 /* Private */
 void _osdk_topic_decode(const osdk_flight_data_t* const flight_data);
 

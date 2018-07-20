@@ -12,6 +12,7 @@
 #include "system_error.h"
 
 #include "canBusProcess.h"
+#include "custom_data.h"
 #include "dbus.h"
 #include "sbus.h"
 #include "params.h"

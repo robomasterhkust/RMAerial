@@ -30,6 +30,8 @@ static float yaw_init_pos = 0.0f, pitch_init_pos = 0.0f;
 static PIMUStruct pIMU;
 static bool rune_state = false;
 
+static uint8_t   gimbal_init_cmd; //RC command to control gimbal using drone master RC controller
+
 static thread_t* gimbal_thread_p = NULL;
 static thread_t* gimbal_init_thread_p = NULL;
 
@@ -58,6 +60,11 @@ uint32_t gimbal_get_error(void)
 void gimbal_clear_error(void)
 {
   gimbal.errorFlag = 0;
+}
+
+void gimbal_setInitCmd(uint8_t cmd)
+{
+  gimbal_init_cmd = cmd;
 }
 
 void gimbal_setRune(uint8_t cmd)
@@ -527,7 +534,8 @@ typedef enum{
   INIT_STATE_LEFT_SWING,
   INIT_STATE_RIGHT_SWING,
   INIT_STATE_PITCH_YAW,
-  INIT_STATE_LOCK_YAW //Lock yaw axis if pitch axis is disturbed
+  INIT_STATE_LOCK_YAW, //Lock yaw axis if pitch axis is disturbed
+  INIT_STATE_COMPLETE
 } gimbal_init_state_t;
 
 #define GIMBAL_INIT_MAX_ERROR        0.05f
@@ -583,6 +591,9 @@ static THD_FUNCTION(gimbal_init_thread, p)
                        _error[GIMBAL_YAW] > -GIMBAL_INIT_MAX_ERROR),
                        GIMBAL_INIT_SCORE_FULL, &(_init_count[2]))
         )
+        init_state = INIT_STATE_COMPLETE;
+
+      if(init_state == INIT_STATE_COMPLETE) //&& gimbal_init_cmd)
       {
         /*exit this thread and start attitude control*/
         chSysLock();

@@ -108,6 +108,7 @@ int main(void)
   osdkComm_init();
   droneCmd_init();
   judgeinit();
+  customData_init();
 
   while(!power_check())
     chThdSleepMilliseconds(200);
@@ -123,16 +124,29 @@ int main(void)
 
   wdgStart(&WDGD1, &wdgcfg); //Start the watchdog
 
+  SBUS_t* rc_master = SBUS_get();
+  uint32_t count = 0;
   while (true)
   {
     uint32_t error = gimbal_get_error();
+
+    count++;
+    if(rc_master->ch7 == SBUS_S_UP)
+    {
+      if(!(count % 2))
+        customData_setIndicator(LED_INDICATOR_MESSAGE, 0);
+      else if(!((count + 1) % 2))
+        customData_setIndicator(LED_INDICATOR_MESSAGE, 1);
+    }
+    else
+      customData_setIndicator(LED_INDICATOR_MESSAGE, 1);
 
     if(!power_failure())
       wdgReset(&WDGD1);
     else
       gimbal_kill();
 
-    chThdSleepMilliseconds(200);
+    chThdSleepMilliseconds(100);
   }
 
   return 0;

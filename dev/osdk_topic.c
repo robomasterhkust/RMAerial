@@ -79,6 +79,24 @@ bool osdk_rc_check(void)
   return result;
 }
 
+static uint8_t         battery_data;
+static osdk_battery    battery;
+static bool            battery_subscribed = false;
+static bool            battery_received   = false;
+
+osdk_battery* osdk_battery_subscribe(void)
+{
+  battery_subscribed = true;
+  return &battery;
+}
+
+bool osdk_battery_check(void)
+{
+  bool result = battery_received;
+  battery_received = false;
+  return result;
+}
+
 void _osdk_topic_decode(const osdk_flight_data_t* const flight_data)
 {
   uint8_t index = 0;
@@ -130,5 +148,20 @@ void _osdk_topic_decode(const osdk_flight_data_t* const flight_data)
       chSysUnlock();
     }
     index += sizeof(osdk_RC);
+  }
+  if(flight_data->flag.flight_status)
+  {
+    index += 1;
+  }
+  if(flight_data->flag.battery)
+  {
+    battery_received = true;
+    if(battery_subscribed)
+    {
+      chSysLock();
+      memcpy(&battery_data, &(flight_data->data[index]), 1);
+      chSysUnlock();
+    }
+    index += 1;
   }
 }

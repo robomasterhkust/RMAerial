@@ -5,7 +5,11 @@
 // #define SHOOTER_SETUP
 // void pwm12_setWidth(uint16_t width);
 
+#define SHOOTER_LOW_SPEED  10
+#define SHOOTER_HIGH_SPEED 20
+
 void shooter_setRuneState(const uint8_t enable); //User set shooter to rune mode
+uint8_t shooter_getSpeed(void);
 void shooter_start(void);
 
 typedef struct

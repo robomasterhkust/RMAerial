@@ -103,6 +103,7 @@ typedef struct{
 }  GimbalStruct;
 
 GimbalStruct* gimbal_get(void);
+void gimbal_setInitCmd(uint8_t cmd);
 void gimbal_setRune(uint8_t cmd);
 GimbalStruct* gimbal_get_sys_iden(void);
 uint32_t gimbal_get_error(void);

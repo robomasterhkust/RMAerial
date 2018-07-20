@@ -7,6 +7,7 @@
 #include "osdk_comm.h"
 #include "osdk_drone_cmd.h"
 #include "gimbal.h"
+#include "custom_data.h"
 #include "math_misc.h"
 
 #include <string.h>
@@ -112,8 +113,14 @@ static THD_FUNCTION(drone_cmd, p)
        rc_master->ch4 < SBUS_CH_VALUE_MIN + 5
       )
       airborne = true;
+
+    if(rc_master->ch7 == SBUS_S_UP) //Used to test the gimbal
+      gimbal_setInitCmd(ENABLE);
+
     chThdSleepMilliseconds(10);
   }
+
+  gimbal_setInitCmd(ENABLE);
 
   init_yaw = osdk_attitude_get_yaw();
   float sine = sinf(init_yaw),
@@ -145,7 +152,6 @@ static THD_FUNCTION(drone_cmd, p)
     {
       tick = chVTGetSystemTimeX();
     }
-
 
     if(flight_mode == OSDK_RC_MODE_P_SDK)
     {
@@ -179,7 +185,7 @@ static THD_FUNCTION(drone_cmd, p)
       z = mapInput(rc_master->ch3, SBUS_CH_VALUE_MIN, SBUS_CH_VALUE_MAX,
         USER_CTRL_VERT_VEL_MIN, USER_CTRL_VERT_VEL_MAX);
 
-      if(RC_getState() == RC_UNLOCKED)
+      if(RC_getState() == RC_UNLOCKED && rc_master->ch7 != SBUS_S_DOWN)
       {
         yaw = mapInput(rc_slave->rc.channel2,  RC_CH_VALUE_MIN , RC_CH_VALUE_MAX,
           -GIMBAL_MAX_SPEED_YAW * 180.0f/ M_PI ,
@@ -198,6 +204,14 @@ static THD_FUNCTION(drone_cmd, p)
       float y_out = y * cosine + x * sine,
             x_out = x * cosine - y * sine;
 
+      if(rc_master->ch7 == SBUS_S_DOWN)
+      {
+        gimbal_setInitCmd(DISABLE);
+        customData_setIndicator(LED_INDICATOR_MESSAGE, 0);
+      }
+      else
+        gimbal_setInitCmd(ENABLE);
+
       droneCmd_Flight_control(ctrl_mode, x_out, y_out, z, yaw);
     }
   }
@@ -213,17 +227,37 @@ static THD_FUNCTION(dji_sdk, p)
   while(comm->rxchn_state != OSDK_RXCHN_STATE_STABLE)
     chThdSleepMilliseconds(100);
 
-  chThdSleepSeconds(2);
+  chThdSleepSeconds(5);
 
   while(true)
   {
     if(flight_mode != rc_master->ch6)
     {
       if(rc_master->ch6 == OSDK_RC_MODE_P_SDK)
+      {
         droneCmd_OSDK_control(ENABLE);
+        customData_setIndicator(LED_INDICATOR_OSDK, 1);
+      }
       else
+      {
         droneCmd_OSDK_control(DISABLE);
+        customData_setIndicator(LED_INDICATOR_OSDK, 0);
+      }
     }
+
+    if(rc_master->ch4 < 564)
+      customData_setLEDStream(LEDS_STREAM_LEFT, 10);
+    else if(rc_master->ch4 > 1484)
+      customData_setLEDStream(LEDS_STREAM_RIGHT, 10);
+    else
+      customData_setLEDStream(LEDS_STATIC, 10);
+
+    if(rc_master->ch5 < 564)
+      customData_setLED(LED_YES);
+    else if(rc_master->ch5 > 1484)
+      customData_setLED(LED_NO);
+    else
+      customData_setLED(LED_STREAM_VALUE);
 
     flight_mode = rc_master->ch6;
     chThdSleepMilliseconds(20);
